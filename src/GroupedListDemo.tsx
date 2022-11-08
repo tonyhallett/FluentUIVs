@@ -1,4 +1,5 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme } from "@fluentui/react";
+import { useRef, useState } from "react";
 import { VsColors, VsTheme } from "./themeColors";
 
 /*
@@ -154,9 +155,10 @@ const groupNestingDepth = 1;
 export interface IGroupedListDemoProps{
   vsColors:VsColors
 }
-let version = 0;
+
 let lastVsColors:VsColors|undefined;
 export function GroupedListDemo(props:IGroupedListDemoProps){
+    const detailsListRef = useRef<IDetailsList>(null);
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
@@ -183,37 +185,41 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               background: headerColors.MouseDown,
             },
           },
-        }
+        },
       ],
       cellTitle:[
         focusStyle,
-      ],
+      ],  
       nearIcon:{
         color:headerColors.Glyph
       },
       sortIcon:{
         color:headerColors.Glyph
+      },
+      gripperBarVerticalStyle:{
+        color:headerColors.SeparatorLine
       }
      }
     }
     columns.forEach(c => c.styles=columnStyles);
 
     const needsNewVersion = lastVsColors !== vsColors;
-    console.log(needsNewVersion);
     if(needsNewVersion){
-      version ++;
+      detailsListRef.current?.forceUpdate();
     }
 
     lastVsColors = vsColors;
     return <DetailsList 
+        componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.fixedColumns}
         selectionMode={SelectionMode.none} 
         items={items} 
         groups={groups}
         columns={columns}
+        onColumnResize={() => {console.log("OnColumnResize")}}
         listProps={
-          {version}
+          {}
         }
         groupProps={{
           showEmptyGroups:false,
@@ -251,7 +257,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 />
             }
           },
-          onRenderHeader: (props:IGroupHeaderProps|undefined) => {
+          onRenderHeader: (props:IGroupHeaderProps|undefined, defaultRender) => {
             _columns = (props as any).columns; // ****************************** any cast
             const styles:IGroupHeaderProps["styles"] = styleProps  => {
               const {selected} = styleProps
@@ -287,7 +293,9 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 },
               }
             }}
-            return <GroupHeader {...props} styles={styles}/>
+            props!.styles = styles;
+            return defaultRender!(props)
+            //return <GroupHeader {...props} styles={styles}/>
           }
         }}
 
