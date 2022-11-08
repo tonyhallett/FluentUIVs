@@ -110,7 +110,8 @@ const columns:IColumn[] = [
     minWidth:100,
     isGrouped:true,
     isSorted:true,
-    isSortedDescending: false
+    isSortedDescending: false,
+    isResizable:true
   },
   {
     fieldName:"first",
@@ -118,13 +119,16 @@ const columns:IColumn[] = [
     key:"first",
     minWidth:100,
     isSorted:true,
-    isSortedDescending: true
+    isSortedDescending: true,
+    isResizable:true
   },
   {
     fieldName:"second",
     name:"second",
     key:"second",
     minWidth:100,
+    isFiltered:true,
+    isResizable:true
   }
 ];
 
@@ -150,9 +154,12 @@ const groupNestingDepth = 1;
 export interface IGroupedListDemoProps{
   vsColors:VsColors
 }
+let version = 0;
+let lastVsColors:VsColors|undefined;
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
+    const environmentColors = vsColors.EnvironmentColors;
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
     const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:focusColor});
     const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
@@ -191,41 +198,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     }
     columns.forEach(c => c.styles=columnStyles);
 
-    const styles:IGroupHeaderProps["styles"] = styleProps  => {
-      const {selected} = styleProps
-      return {
-      root:[{
-        borderBottom: `1px solid ${headerColors.SeparatorLine}`, // what to do here
-        background:headerColors.Default,
-        color:headerColors.DefaultText,
-        selectors: {
-          ':hover': {
-            background: headerColors.MouseOver,
-            color: headerColors.MouseOverText,
-          },
-        }
-      },
-      ],
-      // inside root
-      groupHeaderContainer:{
+    const needsNewVersion = lastVsColors !== vsColors;
+    console.log(needsNewVersion);
+    if(needsNewVersion){
+      version ++;
+    }
 
-      },
-      expand:{  
-        color:headerColors.Glyph,
-        selectors: { // ignoring selected state
-          ':hover': {
-            color: headerColors.MouseOverGlyph,
-            backgroundColor: headerColors.MouseOver
-          },
-          ':active': {
-            color: headerColors.MouseDownGlyph,
-            backgroundColor: headerColors.MouseDown
-          },
-        },
-      }
-    }}
-    
-
+    lastVsColors = vsColors;
     return <DetailsList 
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.fixedColumns}
@@ -233,20 +212,20 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         items={items} 
         groups={groups}
         columns={columns}
-        
+        listProps={
+          {version}
+        }
         groupProps={{
           showEmptyGroups:false,
           headerProps:{
-            headerColors:headerColors,
             onRenderTitle:(props:IGroupHeaderProps|undefined) => {
               // groupNestingDepth used for aria
-              
               const groupLevel = props!.groupLevel === undefined ? 0 : props!.groupLevel;
               const headerGroupNestingDepth = groupNestingDepth- groupLevel - 1;
               const focusZoneProps:IFocusZoneProps = {
-                disabled:true
-              }
-              // 
+                "data-is-focusable":false
+              } as any
+               
               return <DetailsRow {...props} 
                 focusZoneProps={focusZoneProps} 
                 groupNestingDepth={headerGroupNestingDepth} 
@@ -256,20 +235,30 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 itemIndex={props!.groupIndex!}
                 styles={
                   {
-
+                    root: {
+                      background:"inherit",
+                      borderBottom:"none",
+                      color:"inherit",
+                      selectors: {
+                        "&:hover":{
+                          background:"inherit",
+                          color:"inherit",
+                        }
+                      }
+                    },
                   }
                 }
                 />
             }
-          } as any,
+          },
           onRenderHeader: (props:IGroupHeaderProps|undefined) => {
-            console.log("onRenderGroupheader");
             _columns = (props as any).columns; // ****************************** any cast
             const styles:IGroupHeaderProps["styles"] = styleProps  => {
               const {selected} = styleProps
               return {
               root:[{
-                borderBottom: `1px solid ${headerColors.SeparatorLine}`, // what to do here
+                borderBottom: `1px solid ${headerColors.SeparatorLine}`,
+                //borderTop: `1px solid ${headerColors.SeparatorLine}`,
                 background:headerColors.Default,
                 color:headerColors.DefaultText,
                 selectors: {
@@ -278,11 +267,11 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                     color: headerColors.MouseOverText,
                   },
                 }
-              },
+              },focusStyle
               ],
               // inside root
               groupHeaderContainer:{
-
+      
               },
               expand:{  
                 color:headerColors.Glyph,
@@ -300,6 +289,25 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
             }}
             return <GroupHeader {...props} styles={styles}/>
           }
+        }}
+
+        onRenderRow={(rowProps, defaultRender) => {
+          rowProps!.styles = {
+            root: [{
+              background:"none",
+              borderBottom:"none",
+              color:environmentColors.CommandBarTextActive,
+              selectors: {
+                "&:hover":{
+                  background:"none", // if I am hovering on group header....
+                  color:environmentColors.CommandBarTextActive,
+                }
+              }
+            },
+            focusStyle
+          ],
+          };
+          return defaultRender!(rowProps);
         }}
 
         onRenderDetailsHeader={
