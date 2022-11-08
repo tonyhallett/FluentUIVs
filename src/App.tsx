@@ -1,7 +1,7 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { ActionButton, Checkbox, Dropdown, getFocusStyle, getInputFocusStyle, getTheme, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDropdownOption, isDark, IsFocusVisibleClassName, IStyleFunction, Label, Pivot, PivotItem, ProgressIndicator, registerIcons, SearchBox, Slider } from "@fluentui/react";
+import { ActionButton, Checkbox, Dropdown, getFocusStyle, getInputFocusStyle, getTheme, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDropdownOption, isDark, IsFocusVisibleClassName, IStyleFunction, Label, makeStyles, Pivot, PivotItem, ProgressIndicator, registerIcons, SearchBox, Slider, useDocument } from "@fluentui/react";
 import { useState } from "react";
 import {vsThemes} from "./themeColors";
 import{ CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon, GroupedAscendingIcon, GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
@@ -10,6 +10,9 @@ import { SimpleTableDemo } from "./simpleTableDemo";
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 import { GroupedListDemo } from "./GroupedListDemo";
+import React from "react";
+import { ThemeProviderState } from "@fluentui/react/lib/utilities/ThemeProvider/ThemeProvider.types";
+import { useBodyToolWindow } from "./useBody";
 
 
 
@@ -40,6 +43,7 @@ const buttonHighContrastFocus = {
     outlineColor: 'ButtonText', 
 };
 
+
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
     const [selectedThemeIndex,setSelectedThemeIndex] = useState(0);
@@ -49,9 +53,11 @@ export function App() {
     const [filter, setFilter] = useState("");
     const [selectedDropDownOption, setSelectedDropDownOptions] = useState<IDropdownOption>();
     
+    
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeName = selectedTheme[0];
     const selectedThemeColors = selectedTheme[1];
+    useBodyToolWindow(selectedThemeColors.EnvironmentColors.ToolWindowBackground);
     function nextTheme(){
         var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
         setSelectedThemeIndex(next);
