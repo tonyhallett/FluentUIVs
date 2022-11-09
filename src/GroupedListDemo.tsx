@@ -1,6 +1,7 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton } from "@fluentui/react";
 import { useRef, useState } from "react";
 import { VsColors, VsTheme } from "./themeColors";
+import { getActionButtonStyles } from "./themeStyles";
 
 /*
     todo
@@ -17,7 +18,8 @@ import { VsColors, VsTheme } from "./themeColors";
 interface IDemoItem{
   name:string,
   first:number,
-  second:number
+  percentage:number | null,
+  isGroup?:true
 }
 
 
@@ -25,31 +27,31 @@ interface IDemoItem{
 const items:IDemoItem[] = [
   // Group 1
   {
-    name: "first",
+    name: "first.!!!!!!!!!!!!!!!!!!!!!",
     first: 1,
-    second:2
+    percentage:10
   },
   // Group 2
   {
-    name: "second",
+    name: "second!!!!!!!!!!!!!!!!!!!!!",
     first: 1,
-    second:2
+    percentage:20
   },
   {
-    name: "third",
+    name: "third!!!!!!!!!!!!!!!!!!!!!!!",
     first: 1,
-    second:2
+    percentage:30
   },
   // Group nested 1
   {
-    name: "fourth",
+    name: "fourth!!!!!!!!!!!!!!!!!!!!!!!!",
     first: 1,
-    second:2
+    percentage:40
   },
   {
-    name: "fifth",
+    name: "fifth!!!!!!!!!!!!!!!!!!!!!!!!",
     first: 1,
-    second:2
+    percentage:null
   }
 ];
 
@@ -62,7 +64,8 @@ const groups:IDemoGroup[] = [
     key:"group1",
     name:"Group 1",
     first:123,
-    second:345
+    percentage:10,
+    isGroup:true
   },
   {
     startIndex:1,
@@ -70,11 +73,13 @@ const groups:IDemoGroup[] = [
     key:"group2",
     name:"Group 2",
     first:123,
-    second:345
+    percentage:20,
+    isGroup:true
   },
   {
     startIndex:1, // are these important for the nested ?
     count:2,
+    isGroup:true,
     children:[
       {
         key:"groupNested1",
@@ -82,7 +87,8 @@ const groups:IDemoGroup[] = [
         startIndex:3,
         count:1,
         first:123,
-        second:345
+        percentage:60,
+        isGroup:true
       },
       {
         key:"groupNested2",
@@ -90,20 +96,24 @@ const groups:IDemoGroup[] = [
         startIndex:4,
         count:1,
         first:123,
-        second:345
+        percentage:70,
+        isGroup:true
       }
     ],
     key:"groupNested",
     name:"Group Nested",
     first:123,
-    second:345
+    percentage:null,
   }
 ];
 
 
-
+type IDemoColumn = Omit<IColumn, 'onRender'> & {
+  onRenderWithStyles?:(styles:any,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
+  fieldName:string
+}
 //const groupNestingDepth = grouping > 0 ? 2 : 1;
-const columns:IColumn[] = [
+const columns:IDemoColumn[] = [
   {
     fieldName:"name",
     name:"name",
@@ -112,7 +122,14 @@ const columns:IColumn[] = [
     isGrouped:true,
     isSorted:true,
     isSortedDescending: false,
-    isResizable:true
+    isResizable:true,
+    onRenderWithStyles(vsColors:VsColors,item:IDemoItem){
+      const renderName = item.isGroup;
+      if(renderName){
+        return <span>{item.name}</span>
+      }
+      return <span><ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton><span style={{marginLeft:"5px"}}>{item.name}</span></span>
+    }
   },
   {
     fieldName:"first",
@@ -124,31 +141,18 @@ const columns:IColumn[] = [
     isResizable:true
   },
   {
-    fieldName:"second",
-    name:"second",
-    key:"second",
+    fieldName:"percentage",
+    name:"percentage",
+    key:"percentage",
     minWidth:100,
     isFiltered:true,
-    isResizable:true
+    isResizable:true,
+    flexGrow:1,
+    onRenderWithStyles(vsColors:VsColors,item:IDemoItem){
+      return renderPercentage(item.percentage,vsColors);
+    }
   }
 ];
-
-/*
-
-IGroup has 
-children - IGroup[]
-count
-
-interface ICoverageGroup extends IGroup, ICoverageItemBase{
-  classPaths:undefined
-  totalBranches:number
-  coveredBranches:number
-  totalLines:number,
-  filter:(filter:string, hideFullyCovered:boolean) => void
-  sort:(fieldName:keyof ICoverageItemBase,ascending:boolean) => void
-  hideFullyCovered?:never
-}
-*/
 
 let _columns:any = null;
 const groupNestingDepth = 1;
@@ -156,7 +160,30 @@ export interface IGroupedListDemoProps{
   vsColors:VsColors
 }
 
+function renderPercentage(percentage:number | null,vsColors:VsColors){
+  const {EnvironmentColors, HeaderColors} = vsColors;
+  const backgroundColor = percentage === null ? "transparent" : EnvironmentColors.VizSurfaceGreenMedium;//HeaderColors.SeparatorLine
+  return <ProgressIndicator barHeight={5} percentComplete={percentage === null ? 1 : percentage/100} styles={
+    {
+      progressBar:{
+        backgroundColor,
+        color:"transparent"
+      },
+      progressTrack:{
+        backgroundColor:"transparent",
+        color:"transparent"
+      },
+      root:{
+        width:'100px',
+        color:"transparent"
+      },
+    }
+  }/>
+}
+
+
 let lastVsColors:VsColors|undefined;
+
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
     const {vsColors} = props;
@@ -208,12 +235,19 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     if(needsNewVersion){
       detailsListRef.current?.forceUpdate();
     }
-
+    const onRenderItemColumn:IDetailsRowProps["onRenderItemColumn"] = (item,index, column) => {
+      const demoColumn = column as IDemoColumn;
+      if(demoColumn!.onRenderWithStyles){
+        return demoColumn.onRenderWithStyles(vsColors, item, index, demoColumn);
+      }else{
+        return item[demoColumn.fieldName];
+      }
+    }
     lastVsColors = vsColors;
     return <DetailsList 
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
-        layoutMode={DetailsListLayoutMode.fixedColumns}
+        layoutMode={DetailsListLayoutMode.justified}
         selectionMode={SelectionMode.single} 
         checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
@@ -237,6 +271,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 columns={_columns} 
                 selectionMode={SelectionMode.none} 
                 itemIndex={props!.groupIndex!}
+                onRenderItemColumn={onRenderItemColumn}
                 styles={
                   {
                     root: {
@@ -320,6 +355,9 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
           rowProps!.styles = (detailsRowStyleProps) => {
             const {isSelected} = detailsRowStyleProps;
             return {
+              fields:{
+                alignItems:"center"
+              },
               root: [{
                 background:treeViewColors.Background, // mirroring vs, docs say "transparent",
                 borderBottom:"none",
@@ -378,7 +416,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         };
           return defaultRender!(rowProps);
         }}
-
+        onRenderItemColumn={onRenderItemColumn}
         onRenderDetailsHeader={
           (detailsHeaderProps: IDetailsHeaderProps | undefined, defaultRender: any) => {
             /* if(active){

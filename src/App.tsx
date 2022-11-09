@@ -4,17 +4,24 @@
 import { ActionButton, Checkbox, Dropdown, getFocusStyle, getInputFocusStyle, getTheme, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDropdownOption, isDark, IsFocusVisibleClassName, IStyleFunction, Label, makeStyles, Pivot, PivotItem, ProgressIndicator, registerIcons, SearchBox, Slider, useDocument } from "@fluentui/react";
 import { useState } from "react";
 import {vsThemes} from "./themeColors";
-import{ CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon, GroupedAscendingIcon, GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
+import{ CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon, GroupedAscendingIcon, GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { SimpleTableDemo } from "./simpleTableDemo";
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 import { GroupedListDemo } from "./GroupedListDemo";
-import React from "react";
-import { ThemeProviderState } from "@fluentui/react/lib/utilities/ThemeProvider/ThemeProvider.types";
 import { useBodyToolWindow } from "./useBody";
 
 
+//https://github.com/microsoft/fluentui/issues/22895
+const VisualStudioIDELogo32Icon = createSvgIcon({
+  svg: ({ classes }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" className={classes.svg}>
+      <path d="M2048 213v1622l-512 213L0 1536l1536 223V0l512 213zM245 1199l-117-39V590l117-39 283 213 470-465 282 119v913l-282 120-470-466-283 214zm430-324l323 244V631L675 875zm-430 169l171-169-171-170v339z" />
+    </svg>
+  ),
+  displayName: 'VisualStudioIDELogo32Icon',
+});
 
 registerIcons({
     icons: {
@@ -32,6 +39,7 @@ registerIcons({
       groupeddescending:<GroupedDescendingIcon/>,
       sortdown:<SortDownIcon/>,
       sortup:<SortUpIcon/>,
+      OpenFile: <VisualStudioIDELogo32Icon />,
     },
   });
 
@@ -43,6 +51,9 @@ const buttonHighContrastFocus = {
     outlineColor: 'ButtonText', 
 };
 
+function ColorDisplay(props:{color:string}){
+  return <div style={{width:"100px",height:"50px",backgroundColor:props.color}}/>
+}
 
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
@@ -73,7 +84,6 @@ export function App() {
 
     const focusColor = commonControlsColors.FocusVisualText;
     const searchControlColors = selectedThemeColors.SearchControlColors;
-    const headerColors = selectedThemeColors.HeaderColors;
 
     
     const toolWindowTextColor = getColor(environmentColors.ToolWindowText);
@@ -81,6 +91,7 @@ export function App() {
     const hoverToolWindowTextShade = lightenOrDarken(toolWindowTextColor,0.4,toolWindowTextDark); 
     const hoverToolWindowText=  colorRGBA(hoverToolWindowTextShade);
     const theme = getTheme();
+    
     function getActionButtonStyles(){
       const actionButtonStyles = {
         root:[
@@ -127,17 +138,22 @@ export function App() {
       return actionButtonStyles
     }
 
+    const alwaysRender = false;
     const items:JSX.Element[] = [
-      <PivotItem key={0} itemKey='first' headerText='First' alwaysRender>
-        <span>First</span>
+      <PivotItem key={0} itemKey='first' headerText='First' alwaysRender={alwaysRender}>
+        <div>
+          <ColorDisplay color={environmentColors.VizSurfaceGreenLight}/>
+          <ColorDisplay color={environmentColors.VizSurfaceGreenMedium}/>
+          <ColorDisplay color={environmentColors.VizSurfaceGreenDark}/>
+        </div>
       </PivotItem>,
-      <PivotItem key={1} itemKey='log' headerText='Log' alwaysRender>
+      <PivotItem key={1} itemKey='log' headerText='Log' alwaysRender={alwaysRender}>
         <LogDemo toolWindowBackground={toolWindowBackground} toolWindowText={toolWindowText} actionButtonStyles={getActionButtonStyles()}/>
       </PivotItem>,
-      <PivotItem key={2} itemKey='simpleTable' headerText='Simple Table' alwaysRender>
+      <PivotItem key={2} itemKey='simpleTable' headerText='Simple Table' alwaysRender={alwaysRender}>
         <SimpleTableDemo environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
       </PivotItem>,
-      <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender>
+      <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
         <GroupedListDemo vsColors={selectedThemeColors}/>
     </PivotItem>
     ]
@@ -489,7 +505,7 @@ export function App() {
         <ActionButton iconProps={{iconName:"logRemove"}} styles={demoActionButtonStyles}/>
 
 
-        <ProgressIndicator barHeight={1} percentComplete={percentComplete} styles={ props => {
+        <ProgressIndicator barHeight={5} percentComplete={percentComplete} styles={ props => {
 
             return {
                 progressTrack:{
@@ -498,14 +514,13 @@ export function App() {
                 },
                 // might use an accent color
                 progressBar:[
-                    {
-                        backgroundColor: "pink",// // or environmentColors.ToolWindowText  
-                    },
-                    props.indeterminate && {
-                        background:
-                        `linear-gradient(to right, ${progressBarColors.IndicatorFill} 0%, ` +
-                        `${progressBarColors.IndicatorFill} 50%, ${progressBarColors.IndicatorFill} 100%)`,
-                    }
+                {
+                },
+                props.indeterminate && {
+                    background:
+                    `linear-gradient(to right, ${progressBarColors.IndicatorFill} 0%, ` +
+                    `${progressBarColors.IndicatorFill} 50%, ${progressBarColors.IndicatorFill} 100%)`,
+                }
                 ]
             }
         }}/>
