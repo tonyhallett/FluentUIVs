@@ -1,4 +1,4 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility } from "@fluentui/react";
 import { useRef, useState } from "react";
 import { VsColors, VsTheme } from "./themeColors";
 
@@ -162,6 +162,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
+    const treeViewColors = vsColors.TreeViewColors;
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
     const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:focusColor});
     const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
@@ -169,19 +170,19 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       return {
         root:[
           {
-            color:headerColors.DefaultText,
-            background:headerColors.Default
-            // could add border here - but will need to not duplicate
+            color:environmentColors.CommandBarTextActive, // mirroring vs - alt headerColors.DefaultText,
+            background:headerColors.Default,
+            borderLeft:`1px solid ${headerColors.SeparatorLine}`
           },
         isActionable && {
           selectors: {
             ':hover': {
-              color: headerColors.MouseOverText,
+              color: environmentColors.CommandBarTextHover,// mirroring vs, alt headerColors.MouseOverText,
               background: headerColors.MouseOver,
               // glyph to do
             },
             ':active': {
-              color:headerColors.MouseDownText,
+              color:environmentColors.CommandBarTextSelected, //mirroring vs, alt headerColors.MouseDownText,
               background: headerColors.MouseDown,
             },
           },
@@ -213,14 +214,11 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.fixedColumns}
-        selectionMode={SelectionMode.none} 
+        selectionMode={SelectionMode.single} 
+        checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
         groups={groups}
         columns={columns}
-        onColumnResize={() => {console.log("OnColumnResize")}}
-        listProps={
-          {}
-        }
         groupProps={{
           showEmptyGroups:false,
           headerProps:{
@@ -232,7 +230,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 "data-is-focusable":false
               } as any
                
-              return <DetailsRow {...props} 
+              return  <DetailsRow {...props} 
                 focusZoneProps={focusZoneProps} 
                 groupNestingDepth={headerGroupNestingDepth} 
                 item={props!.group} 
@@ -265,20 +263,17 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               root:[{
                 borderBottom: `1px solid ${headerColors.SeparatorLine}`,
                 //borderTop: `1px solid ${headerColors.SeparatorLine}`,
+
                 background:headerColors.Default,
-                color:headerColors.DefaultText,
+                color: environmentColors.CommandBarTextActive, // *** mirroring vs, alt headerColors.DefaultText
                 selectors: {
                   ':hover': {
                     background: headerColors.MouseOver,
-                    color: headerColors.MouseOverText,
+                    color: environmentColors.CommandBarTextHover // *** mirroring vs, alt headerColors.MouseOverText,
                   },
                 }
               },focusStyle
               ],
-              // inside root
-              groupHeaderContainer:{
-      
-              },
               expand:{  
                 color:headerColors.Glyph,
                 selectors: { // ignoring selected state
@@ -291,30 +286,96 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                     backgroundColor: headerColors.MouseDown
                   },
                 },
-              }
+              },
+              cellSizer: [
+                {
+                  selectors: {
+                    ':after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      width: 1,
+                      background: headerColors.MouseOver,
+                      opacity: 0,
+                      left: '50%',
+                    },
+                    // could change the boxShadow
+                    /* [`&.${classNames.isResizing}:after`]: [
+                      cellSizerFadeInStyles,
+                      {
+                        boxShadow: '0 0 5px 0 rgba(0, 0, 0, 0.4)',
+                      },
+                    ], */
+                  },
+                },
+              ],
             }}
             props!.styles = styles;
             return defaultRender!(props)
-            //return <GroupHeader {...props} styles={styles}/>
           }
         }}
 
         onRenderRow={(rowProps, defaultRender) => {
-          rowProps!.styles = {
-            root: [{
-              background:"none",
-              borderBottom:"none",
-              color:environmentColors.CommandBarTextActive,
-              selectors: {
-                "&:hover":{
-                  background:"none", // if I am hovering on group header....
-                  color:environmentColors.CommandBarTextActive,
+          rowProps!.styles = (detailsRowStyleProps) => {
+            const {isSelected} = detailsRowStyleProps;
+            return {
+              root: [{
+                background:treeViewColors.Background, // mirroring vs, docs say "transparent",
+                borderBottom:"none",
+                color:environmentColors.CommandBarTextActive,
+                selectors: {
+                  "&:hover":{
+                    background:treeViewColors.Background, // mirroring vs, docs say "transparent",
+                    color:environmentColors.CommandBarTextActive,
+                  }
                 }
-              }
-            },
-            focusStyle
-          ],
-          };
+              },
+              
+              isSelected && {
+                color: treeViewColors.SelectedItemInactiveText,
+                background: treeViewColors.SelectedItemInactive,
+                borderBottom: "none",
+                selectors: {
+                  '&:before': {
+                    borderTop: "none",
+                  },
+          
+                  // Selected State hover
+                  '&:hover': {
+                    color: treeViewColors.SelectedItemInactiveText,
+                    background: treeViewColors.SelectedItemInactive,
+                  },
+          
+                  // Focus state
+                  '&:focus': {
+                    color: treeViewColors.SelectedItemActiveText,
+                    background: treeViewColors.SelectedItemActive,
+                    selectors: {
+                      [`.ms-DetailsRow-cell`]: {
+                        color: treeViewColors.SelectedItemActiveText,
+                        background: treeViewColors.SelectedItemActive,
+                      },
+                    },
+                  },
+          
+                  // Focus and hover state
+                  '&:focus:hover': {
+                    color: treeViewColors.SelectedItemActiveText,
+                    background: treeViewColors.SelectedItemActive,
+                    selectors: {
+                      [`.ms-DetailsRow-cell`]: {
+                        color: treeViewColors.SelectedItemActiveText,
+                        background: treeViewColors.SelectedItemActive,
+                      },
+                    },
+                  },
+                },
+              },
+              focusStyle,
+            ],
+          }
+        };
           return defaultRender!(rowProps);
         }}
 
