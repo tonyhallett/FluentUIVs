@@ -1,32 +1,24 @@
 import { makeStyles, useDocument } from "@fluentui/react";
-import { ThemeProviderState } from "@fluentui/react/lib/utilities/ThemeProvider/ThemeProvider.types";
 import React from "react";
 
-export function useBodyToolWindow(toolWindowBackground: string){
-    const bodyClasses = useBodyStyles(toolWindowBackground)();
-    useApplyClassToBody({applyTo:"body"},[bodyClasses.body])
+export function useBodyToolWindow(bodyStyles:any){
+    const bodyClasses = useBodyStyles(bodyStyles)();
+    useApplyClassToBody([bodyClasses.body])
 }
   
-const useBodyStyles = (toolWindowBackground: string) => {
+//todo type
+const useBodyStyles = (bodyStyles:any) => {
     return makeStyles({
-        body: [
-        {
-            background: toolWindowBackground,
-            
-        },
-        ],
+        body: bodyStyles
     } as Record<string, any>)
 }
   
-function useApplyClassToBody(state: Pick<ThemeProviderState,"applyTo">, classesToApply: string[]): void {
-    const { applyTo } = state;
-
-    const applyToBody = applyTo === 'body';
+function useApplyClassToBody(classesToApply: string[]): void {
     const body = useDocument()?.body;
 
     React.useEffect(() => {
-        if (!applyToBody || !body) {
-        return;
+        if (!body) {
+            return;
         }
 
         for (const classToApply of classesToApply) {
@@ -36,7 +28,7 @@ function useApplyClassToBody(state: Pick<ThemeProviderState,"applyTo">, classesT
         }
 
         return () => {
-        if (!applyToBody || !body) {
+        if (!body) {
             return;
         }
 
@@ -46,5 +38,5 @@ function useApplyClassToBody(state: Pick<ThemeProviderState,"applyTo">, classesT
             }
         }
         };
-    }, [applyToBody, body, classesToApply]);
+    }, [body, classesToApply]);
 }

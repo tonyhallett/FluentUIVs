@@ -65,7 +65,20 @@ const groups:IDemoGroup[] = [
     name:"Group 1",
     first:123,
     percentage:10,
-    isGroup:true
+    isGroup:true,
+    level:0,
+    children:[
+      {
+        key:"groupNestedStart",
+        name:"Group Nested Start",
+        startIndex:0,
+        count:1,
+        first:123,
+        percentage:60,
+        isGroup:true,
+        level:1
+      },
+    ]
   },
   {
     startIndex:1,
@@ -74,12 +87,14 @@ const groups:IDemoGroup[] = [
     name:"Group 2",
     first:123,
     percentage:20,
-    isGroup:true
+    isGroup:true,
+    level:0
   },
   {
     startIndex:1, // are these important for the nested ?
     count:2,
     isGroup:true,
+    level:0,
     children:[
       {
         key:"groupNested1",
@@ -88,7 +103,8 @@ const groups:IDemoGroup[] = [
         count:1,
         first:123,
         percentage:60,
-        isGroup:true
+        isGroup:true,
+        level:1
       },
       {
         key:"groupNested2",
@@ -97,7 +113,8 @@ const groups:IDemoGroup[] = [
         count:1,
         first:123,
         percentage:70,
-        isGroup:true
+        isGroup:true,
+        level:1
       }
     ],
     key:"groupNested",
@@ -112,7 +129,6 @@ type IDemoColumn = Omit<IColumn, 'onRender'> & {
   onRenderWithStyles?:(styles:any,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
 }
-//const groupNestingDepth = grouping > 0 ? 2 : 1;
 const columns:IDemoColumn[] = [
   {
     fieldName:"name",
@@ -147,6 +163,7 @@ const columns:IDemoColumn[] = [
     minWidth:100,
     isFiltered:true,
     isResizable:true,
+    calculatedWidth:0,// workaround DetailsList] NaN is an invalid value for the 'width' css style property
     flexGrow:1,
     onRenderWithStyles(vsColors:VsColors,item:IDemoItem){
       return renderPercentage(item.percentage,vsColors);
@@ -155,7 +172,7 @@ const columns:IDemoColumn[] = [
 ];
 
 let _columns:any = null;
-const groupNestingDepth = 1;
+const groupNestingDepth = 2
 export interface IGroupedListDemoProps{
   vsColors:VsColors
 }
@@ -248,7 +265,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
-        selectionMode={SelectionMode.single} 
+        selectionMode={SelectionMode.single}
         checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
         groups={groups}
@@ -350,7 +367,6 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
             return defaultRender!(props)
           }
         }}
-
         onRenderRow={(rowProps, defaultRender) => {
           rowProps!.styles = (detailsRowStyleProps) => {
             const {isSelected} = detailsRowStyleProps;
@@ -414,11 +430,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
             ],
           }
         };
+          rowProps!.groupNestingDepth = 2; // todo calculate
           return defaultRender!(rowProps);
         }}
         onRenderItemColumn={onRenderItemColumn}
         onRenderDetailsHeader={
           (detailsHeaderProps: IDetailsHeaderProps | undefined, defaultRender: any) => {
+            detailsHeaderProps!.groupNestingDepth = 2; // todo calculate
             /* if(active){
               return <Sticky>
               {defaultRender(detailsHeaderProps)}
