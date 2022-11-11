@@ -4,13 +4,14 @@
 import { ActionButton, Checkbox, Dropdown, getFocusStyle, getInputFocusStyle, getTheme, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDropdownOption, isDark, IsFocusVisibleClassName, IStyleFunction, Label, makeStyles, Pivot, PivotItem, ProgressIndicator, registerIcons, ScrollablePane, SearchBox, Slider, useDocument } from "@fluentui/react";
 import { useState } from "react";
 import {vsThemes} from "./themeColors";
-import{ CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon, GroupedAscendingIcon, GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
+import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon, GroupedAscendingIcon, GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { SimpleTableDemo } from "./simpleTableDemo";
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 import { GroupedListDemo } from "./GroupedListDemo";
 import { useBodyToolWindow } from "./useBody";
+import { FeedbackDemo } from "./FeedbackDemo";
 
 
 //https://github.com/microsoft/fluentui/issues/22895
@@ -40,6 +41,8 @@ registerIcons({
       sortdown:<SortDownIcon/>,
       sortup:<SortUpIcon/>,
       OpenFile: <VisualStudioIDELogo32Icon />,
+      beerMug:<BeerMugIcon/>,
+      review:<ReviewSolidIcon/>,
     },
   });
 
@@ -73,7 +76,8 @@ export function getScrollbarStyle(
   scrollBarThumbBorderHoverColor:string,
   scrollBarThumbBorderActiveColor:string,
   arrowBorderHoverColor:string,
-  arrowBorderActiveColor:string
+  arrowBorderActiveColor:string,
+  
 ){
   function getVerticalArrow(points:string, fill:string){
     
@@ -328,6 +332,13 @@ export function App() {
       </PivotItem>,
       <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
         <GroupedListDemo vsColors={selectedThemeColors}/>
+    </PivotItem>,
+    <PivotItem key={4} itemKey="feedback" headerText='Feedback' alwaysRender={alwaysRender}>
+      <FeedbackDemo commandBarBackground={environmentColors.CommandBarGradientBegin}
+        commandBarBorder={environmentColors.CommandBarToolBarBorder} // or CommandBarBorder
+        commandBarButtonColor={environmentColors.CommandBarTextActive} // will need to have icon colors too
+        commandBarButtonBackground="transparent"
+      />
     </PivotItem>
     ]
 
