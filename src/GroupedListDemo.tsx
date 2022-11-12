@@ -1,7 +1,9 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark } from "@fluentui/react";
 import { useRef, useState } from "react";
+import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
+import { sliderClassNames } from "./globalClassNames";
 import { VsColors, VsTheme } from "./themeColors";
-import { getActionButtonStyles } from "./themeStyles";
+import { buttonHighContrastFocus, getActionButtonStyles } from "./themeStyles";
 
 /*
     todo
@@ -174,7 +176,7 @@ const columns:IDemoColumn[] = [
 let _columns:any = null;
 const groupNestingDepth = 2
 export interface IGroupedListDemoProps{
-  vsColors:VsColors
+  vsColors:VsColors,
 }
 
 function renderPercentage(percentage:number | null,vsColors:VsColors){
@@ -203,12 +205,73 @@ let lastVsColors:VsColors|undefined;
 
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
+    const [sliderValue,setSliderValue] = useState(1);
+    const [filter, setFilter] = useState("");
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
     const treeViewColors = vsColors.TreeViewColors;
+    const searchControlColors = vsColors.SearchControlColors;
+    const commonControlsColors = vsColors.CommonControlsColors;
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
     const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:focusColor});
+
+    const toolWindowTextColor = getColor(environmentColors.ToolWindowText);
+    const toolWindowTextDark = isDark(toolWindowTextColor);
+    const hoverToolWindowTextShade = lightenOrDarken(toolWindowTextColor,0.4,toolWindowTextDark); 
+    const hoverToolWindowText=  colorRGBA(hoverToolWindowTextShade);
+    
+    const sliderStyles:ISliderProps['styles']={
+      root:{
+          width:200
+      },
+      slideBox: [
+          getFocusStyle(null as any,{borderColor: 'transparent',outlineColor:focusColor}),
+          {
+            
+            selectors: {
+              [`:active .${sliderClassNames.activeSection}`]: {
+                backgroundColor:hoverToolWindowText
+              },
+              [`:hover .${sliderClassNames.activeSection}`]: {
+                backgroundColor:hoverToolWindowText
+              },
+    
+              [`:active .${sliderClassNames.inactiveSection}`]: {
+                backgroundColor:hoverToolWindowText
+              },
+              [`:hover .${sliderClassNames.inactiveSection}`]: {
+                backgroundColor:hoverToolWindowText
+              },
+    
+              [`:active .${sliderClassNames.thumb}`]: {
+                border: `2px solid ${commonControlsColors.ButtonBorderPressed}`,
+              },
+              [`:hover .${sliderClassNames.thumb}`]: {
+                border: `2px solid ${commonControlsColors.ButtonBorderPressed}`,
+              },
+            },
+          },
+        ],
+      zeroTick:{
+        background:"red"
+      },
+      activeSection:{
+        background:environmentColors.ToolWindowText // this is the lhs of the selected value
+      },
+      inactiveSection:{
+        background:environmentColors.ToolWindowText // this is the rhs
+      },
+      thumb: [
+        {
+          borderColor: commonControlsColors.ButtonBorder,
+          background: commonControlsColors.Button,
+        },
+      ],
+      valueLabel:{
+        color:environmentColors.ToolWindowText
+      }
+    }
     const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
       const {isActionable} = props;
       return {
@@ -261,7 +324,90 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       }
     }
     lastVsColors = vsColors;
-    return <DetailsList 
+    return <div>
+      <Stack horizontal horizontalAlign='space-between' verticalAlign='center'>
+      <Slider styles={sliderStyles} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
+              return "The value";
+          }}/>
+          <SearchBox clearButtonProps={{
+          ariaLabel: 'Clear text',
+          styles:{
+            root: [
+              getFocusStyle(null as any, { inset: 1, highContrastStyle: buttonHighContrastFocus, borderColor: 'transparent',outlineColor:focusColor }),
+              { height: 'auto'}], 
+            
+          }
+       }}   styles={props => {
+          const {theme, underlined, hasFocus} = props;
+          return { 
+            root: [{ 
+              width: 200, 
+              marginRight:10, 
+              backgroundColor:searchControlColors.Unfocused,
+              border: `1px solid ${searchControlColors.UnfocusedBorder}`,
+              selectors: {
+			          ':hover': {
+			            borderColor: searchControlColors.MouseOverBorder,
+                  backgroundColor:searchControlColors.MouseOverBackground
+			          },
+			          [`:hover .ms-SearchBox-iconContainer`]: {
+			            color: searchControlColors.MouseOverSearchGlyph,
+			          },
+              },
+             },
+              // todo focused states for other
+              hasFocus && [
+                getInputFocusStyle(focusColor,underlined ? 0 : theme.effects.roundedCorner2, underlined ? 'borderBottom' : 'border'),
+                {
+                  border: `1px solid ${searchControlColors.FocusedBorder}`,
+                  backgroundColor:searchControlColors.FocusedBackground
+                }
+              ],
+            ],
+            // gets background color from root
+            field: [{
+              color:searchControlColors.UnfocusedText,
+              selectors:{
+                "::selection":{
+                  color:searchControlColors.SelectionText,
+                  background:searchControlColors.Selection
+                },
+                ":hover":{
+                  color:searchControlColors.MouseOverBackgroundText
+                }
+              }
+              
+            }, hasFocus && {color:searchControlColors.FocusedBackgroundText}],
+            iconContainer: [{
+              color:searchControlColors.SearchGlyph
+            }, 
+            // no need for this as search glyph not visible when focus
+            /*hasFocus && {color:searchControlColors.FocusedSearchGlyph}*/
+            ],
+            clearButton:[
+              {
+                selectors: {
+                  '&:hover .ms-Button.ms-Button': {
+                    backgroundColor: "transparent",
+                  },
+                  '&:hover .ms-Button-icon': {
+                    color: searchControlColors.MouseOverClearGlyph,
+                  },
+                  '.ms-Button-icon': {
+                    color: searchControlColors.ClearGlyph,
+                  },
+                },
+              },
+              hasFocus && {
+                '.ms-Button-icon': {
+                  color:searchControlColors.FocusedClearGlyph,
+                },
+              }
+            ],
+            }
+        }} iconProps={{iconName:'filter'}} value={filter} onChange={(_,newFilter) => setFilter(newFilter!)}/>
+      </Stack>
+      <DetailsList 
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
@@ -474,4 +620,5 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
           }
         }
     />
+    </div>
 }

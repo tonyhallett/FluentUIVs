@@ -1,13 +1,14 @@
 import { getFocusStyle } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 
-const buttonHighContrastFocus = {
+export const buttonHighContrastFocus = {
     left: -2,
     top: -2,
     bottom: -2,
     right: -2,
     outlineColor: 'ButtonText', 
 };
+
 export function getActionButtonStyles(vsColors:VsColors){
     const {CommonControlsColors} = vsColors;
     const actionButtonStyles = {

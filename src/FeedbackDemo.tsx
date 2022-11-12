@@ -1,22 +1,25 @@
 import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { VsColors } from "./themeColors";
 
 
 
 export function FeedbackDemo(props:{
-    commandBarBorder: string;commandBarBackground:string,commandBarButtonColor:string, commandBarButtonBackground:string
+    vsColors:VsColors
 }){
 
-// todo this need to look at CommandBarButton ! same styling as before ?
+  const {vsColors} = props;
+  const {EnvironmentColors:environmentColors} = vsColors;
+
 const buttonStyles:ICommandBarItemProps["buttonStyles"]={
     root:{
-        color:props.commandBarButtonColor,
+        color:environmentColors.CommandBarTextActive,
         backgroundColor:"transparent",
     },
     label:{
-        color:props.commandBarButtonColor
+        color:environmentColors.CommandBarTextActive
     },
     icon:{
-        color:props.commandBarButtonColor
+        color:environmentColors.CommandBarTextActive
     }
 
 }
@@ -71,8 +74,8 @@ const items:ICommandBarItemProps[] = [
     }
   } styles={{
     root:{
-        backgroundColor:props.commandBarBackground,
-        border:`1px solid ${props.commandBarBorder}`
+        backgroundColor:environmentColors.CommandBarGradientBegin,
+        border:`1px solid ${environmentColors.CommandBarToolBarBorder}`
         // add border
     }
     

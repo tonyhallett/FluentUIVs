@@ -5,7 +5,7 @@ type SimpleTableProps = Omit<IDetailsListProps,'role'|'checkboxVisibility'|'isHe
   environmentCommandBarTextActive:string
 }
 
-export function SimpleTable(props:SimpleTableProps){
+function SimpleTable(props:SimpleTableProps){
     
     return <DetailsList
     focusZoneProps={{disabled:true}}
