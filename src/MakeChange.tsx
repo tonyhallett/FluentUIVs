@@ -9,10 +9,13 @@ export function MakeChange(props:{
     nextTheme:IButtonProps['onClick'],
     selectedThemeName:string,
     coverageRunning:boolean,
-    coverageRunningToggled:ICheckboxProps['onChange']
+    coverageRunningToggled:ICheckboxProps['onChange'],
+    useHyperlink:boolean,
+    useHyperlinkToggled:ICheckboxProps['onChange'],
     }){
     const [addScrollbars,setAddScrollbars] = useState(false);
     return <div>
+        <Checkbox styles={props.checkBoxStyles} label="Use hyperlink"  checked={props.useHyperlink} onChange={props.useHyperlinkToggled}/>
         <Label styles={props.labelStyles}>{props.selectedThemeName}</Label>
         <ActionButton iconProps={{iconName:"github"}} styles={
             props.actionButtonStyles

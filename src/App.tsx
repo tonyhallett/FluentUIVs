@@ -12,7 +12,7 @@ import { useBodyToolWindow } from "./useBody";
 import { FeedbackDemo } from "./FeedbackDemo";
 import { getScrollbarStyle } from "./getScrollbarStyle";
 import { ColorDisplay } from "./ColorDisplay";
-import { ButtonDemo } from "./ControlDemo";
+import { ControlsDemo } from "./ControlDemo";
 import { MakeChange } from "./MakeChange";
 import { getActionButtonStyles } from "./themeStyles";
 import { SimpleTableDemo } from "./SimpleTableDemo";
@@ -53,6 +53,7 @@ export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
     const [selectedThemeIndex,setSelectedThemeIndex] = useState(0);
     const [coverageRunning,setCoverageRunning] = useState(false);
+    const [useHyperlink,setUseHyperlink] = useState(false);
     
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeName = selectedTheme[0];
@@ -204,19 +205,23 @@ export function App() {
         <SimpleTableDemo environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
       </PivotItem>,
       <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
-        <GroupedListDemo vsColors={selectedThemeColors}/>
+        <GroupedListDemo useLink={useHyperlink} vsColors={selectedThemeColors}/>
     </PivotItem>,
     <PivotItem key={4} itemKey="feedback" headerText='Feedback' alwaysRender={alwaysRender}>
       <FeedbackDemo vsColors={selectedThemeColors} 
       />
     </PivotItem>,
-    <PivotItem key={5} itemKey="button" headerText='Button' alwaysRender={alwaysRender}>
-      <ButtonDemo vsColors={selectedThemeColors} checkBoxStyles={vsCbStylesFn} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}></ButtonDemo>
+    <PivotItem key={5} itemKey="controls" headerText='Controls' alwaysRender={alwaysRender}>
+      <ControlsDemo vsColors={selectedThemeColors} checkBoxStyles={vsCbStylesFn} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}></ControlsDemo>
     </PivotItem>,
     <PivotItem key={6} itemKey="makeChange" headerText="Make change" alwaysRender={alwaysRender}>
-      <MakeChange coverageRunning={coverageRunning} coverageRunningToggled={(_) => {
+      <MakeChange 
+        useHyperlink={useHyperlink} 
+        useHyperlinkToggled={() =>setUseHyperlink(!useHyperlink) }
+        coverageRunning={coverageRunning} coverageRunningToggled={(_) => {
             setCoverageRunning(!coverageRunning);
-       }} labelStyles={
+       }} 
+       labelStyles={
         {
           root:{
             color:environmentColors.ToolWindowText

@@ -1,4 +1,4 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link } from "@fluentui/react";
 import { useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
@@ -128,7 +128,7 @@ const groups:IDemoGroup[] = [
 
 
 type IDemoColumn = Omit<IColumn, 'onRender'> & {
-  onRenderWithStyles?:(styles:any,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
+  onRenderWithStyles?:(styles:any,useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
 }
 const columns:IDemoColumn[] = [
@@ -141,12 +141,49 @@ const columns:IDemoColumn[] = [
     isSorted:true,
     isSortedDescending: false,
     isResizable:true,
-    onRenderWithStyles(vsColors:VsColors,item:IDemoItem){
+    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
+      const {EnvironmentColors: environmentColors, CommonControlsColors} = vsColors;
+      const focusColor = CommonControlsColors.FocusVisualText;
       const renderName = item.isGroup;
       if(renderName){
         return <span>{item.name}</span>
       }
-      return <span><ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton><span style={{marginLeft:"5px"}}>{item.name}</span></span>
+      return useLink ? <Link styles={props => {
+        const {isDisabled} = props;
+        return {
+          root:[{
+            color:environmentColors.PanelHyperlink,
+            selectors: {
+              '.ms-Fabric--isFocusVisible &:focus': {
+                // Can't use getFocusStyle because it doesn't support wrapping links
+                // https://github.com/microsoft/fluentui/issues/4883#issuecomment-406743543
+                // Using box-shadow and outline allows the focus rect to wrap links that span multiple lines
+                // and helps the focus rect avoid getting clipped.
+                boxShadow: `0 0 0 1px ${focusColor} inset`,
+                outline: `none`,
+              },
+            },
+    
+          },
+          !isDisabled && {
+            /* '&:active, &:hover, &:active:hover': {
+              color: 'transparent',
+            }, */
+            '&:active:hover':{
+              color:environmentColors.PanelHyperlinkPressed
+            },
+            '&:hover':{
+              color:environmentColors.PanelHyperlinkHover
+            },
+            '&:focus': {
+              color: environmentColors.PanelHyperlink
+            },
+  
+          }
+        ]
+        }}
+      }>{item.name}</Link> : 
+       <span><ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton><span style={{marginLeft:"5px"}}>{item.name}</span></span>
     }
   },
   {
@@ -167,7 +204,7 @@ const columns:IDemoColumn[] = [
     isResizable:true,
     calculatedWidth:0,// workaround DetailsList] NaN is an invalid value for the 'width' css style property
     flexGrow:1,
-    onRenderWithStyles(vsColors:VsColors,item:IDemoItem){
+    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
       return renderPercentage(item.percentage,vsColors);
     }
   }
@@ -177,6 +214,7 @@ let _columns:any = null;
 const groupNestingDepth = 2
 export interface IGroupedListDemoProps{
   vsColors:VsColors,
+  useLink:boolean
 }
 
 function renderPercentage(percentage:number | null,vsColors:VsColors){
@@ -318,7 +356,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const onRenderItemColumn:IDetailsRowProps["onRenderItemColumn"] = (item,index, column) => {
       const demoColumn = column as IDemoColumn;
       if(demoColumn!.onRenderWithStyles){
-        return demoColumn.onRenderWithStyles(vsColors, item, index, demoColumn);
+        return demoColumn.onRenderWithStyles(vsColors,props.useLink, item, index, demoColumn);
       }else{
         return item[demoColumn.fieldName];
       }
@@ -329,7 +367,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       <Slider styles={sliderStyles} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
               return "The value";
           }}/>
-          <SearchBox clearButtonProps={{
+      <SearchBox clearButtonProps={{
           ariaLabel: 'Clear text',
           styles:{
             root: [
@@ -424,7 +462,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               const groupLevel = props!.groupLevel === undefined ? 0 : props!.groupLevel;
               const headerGroupNestingDepth = groupNestingDepth- groupLevel - 1;
               const focusZoneProps:IFocusZoneProps = {
-                "data-is-focusable":false
+                "data-is-focusable":true,
               } as any
                
               return  <DetailsRow {...props} 
@@ -520,62 +558,63 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               fields:{
                 alignItems:"center"
               },
-              root: [{
-                background:treeViewColors.Background, // mirroring vs, docs say "transparent",
-                borderBottom:"none",
-                color:environmentColors.CommandBarTextActive,
-                selectors: {
-                  "&:hover":{
-                    background:treeViewColors.Background, // mirroring vs, docs say "transparent",
-                    color:environmentColors.CommandBarTextActive,
+              root: [
+                {
+                  background:treeViewColors.Background, // mirroring vs, docs say "transparent",
+                  borderBottom:"none",
+                  color:environmentColors.CommandBarTextActive,
+                  selectors: {
+                    "&:hover":{
+                      background:treeViewColors.Background, // mirroring vs, docs say "transparent",
+                      color:environmentColors.CommandBarTextActive,
+                    }
                   }
-                }
-              },
+                },
               
-              isSelected && {
-                color: treeViewColors.SelectedItemInactiveText,
-                background: treeViewColors.SelectedItemInactive,
-                borderBottom: "none",
-                selectors: {
-                  '&:before': {
-                    borderTop: "none",
-                  },
-          
-                  // Selected State hover
-                  '&:hover': {
-                    color: treeViewColors.SelectedItemInactiveText,
-                    background: treeViewColors.SelectedItemInactive,
-                  },
-          
-                  // Focus state
-                  '&:focus': {
-                    color: treeViewColors.SelectedItemActiveText,
-                    background: treeViewColors.SelectedItemActive,
-                    selectors: {
-                      [`.ms-DetailsRow-cell`]: {
-                        color: treeViewColors.SelectedItemActiveText,
-                        background: treeViewColors.SelectedItemActive,
+                isSelected && {
+                  color: treeViewColors.SelectedItemInactiveText,
+                  background: treeViewColors.SelectedItemInactive,
+                  borderBottom: "none",
+                  selectors: {
+                    '&:before': {
+                      borderTop: "none",
+                    },
+            
+                    // Selected State hover
+                    '&:hover': {
+                      color: treeViewColors.SelectedItemInactiveText,
+                      background: treeViewColors.SelectedItemInactive,
+                    },
+            
+                    // Focus state
+                    '&:focus': {
+                      color: treeViewColors.SelectedItemActiveText,
+                      background: treeViewColors.SelectedItemActive,
+                      selectors: {
+                        [`.ms-DetailsRow-cell`]: {
+                          color: treeViewColors.SelectedItemActiveText,
+                          background: treeViewColors.SelectedItemActive,
+                        },
                       },
                     },
-                  },
-          
-                  // Focus and hover state
-                  '&:focus:hover': {
-                    color: treeViewColors.SelectedItemActiveText,
-                    background: treeViewColors.SelectedItemActive,
-                    selectors: {
-                      [`.ms-DetailsRow-cell`]: {
-                        color: treeViewColors.SelectedItemActiveText,
-                        background: treeViewColors.SelectedItemActive,
+            
+                    // Focus and hover state
+                    '&:focus:hover': {
+                      color: treeViewColors.SelectedItemActiveText,
+                      background: treeViewColors.SelectedItemActive,
+                      selectors: {
+                        [`.ms-DetailsRow-cell`]: {
+                          color: treeViewColors.SelectedItemActiveText,
+                          background: treeViewColors.SelectedItemActive,
+                        },
                       },
                     },
                   },
                 },
-              },
-              focusStyle,
-            ],
-          }
-        };
+                focusStyle,
+              ],
+            }
+          };
           rowProps!.groupNestingDepth = 2; // todo calculate
           return defaultRender!(rowProps);
         }}
