@@ -199,7 +199,7 @@ export function App() {
         </div>
       </PivotItem>,
       <PivotItem key={1} itemKey='log' headerText='Log' alwaysRender={alwaysRender}>
-        <LogDemo toolWindowBackground={toolWindowBackground} toolWindowText={toolWindowText} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}/>
+        <LogDemo useLinks={useHyperlink} toolWindowBackground={toolWindowBackground} toolWindowText={toolWindowText} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}/>
       </PivotItem>,
       <PivotItem key={2} itemKey='simpleTable' headerText='Simple Table' alwaysRender={alwaysRender}>
         <SimpleTableDemo environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>

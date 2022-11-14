@@ -1,4 +1,4 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps } from "@fluentui/react";
 import { useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
@@ -127,6 +127,8 @@ const groups:IDemoGroup[] = [
 ];
 
 
+
+
 type IDemoColumn = Omit<IColumn, 'onRender'> & {
   onRenderWithStyles?:(styles:any,useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
@@ -146,7 +148,7 @@ const columns:IDemoColumn[] = [
       const focusColor = CommonControlsColors.FocusVisualText;
       const renderName = item.isGroup;
       if(renderName){
-        return <span>{item.name}</span>
+        return <Text styles={{root:{color:'inherit'}}}>{item.name}</Text>
       }
       return useLink ? <Link styles={props => {
         const {isDisabled} = props;
@@ -166,17 +168,14 @@ const columns:IDemoColumn[] = [
     
           },
           !isDisabled && {
-            /* '&:active, &:hover, &:active:hover': {
-              color: 'transparent',
-            }, */
             '&:active:hover':{
-              color:environmentColors.PanelHyperlinkPressed
+              color:environmentColors.PanelHyperlinkPressed,
             },
             '&:hover':{
-              color:environmentColors.PanelHyperlinkHover
+              color:environmentColors.PanelHyperlinkHover,
             },
             '&:focus': {
-              color: environmentColors.PanelHyperlink
+              color: environmentColors.PanelHyperlink,
             },
   
           }
@@ -193,7 +192,10 @@ const columns:IDemoColumn[] = [
     minWidth:100,
     isSorted:true,
     isSortedDescending: true,
-    isResizable:true
+    isResizable:true,
+    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
+      return <Text styles={{root:{color:'inherit'}}} data-is-focusable={true}>{item.first}</Text>
+    }
   },
   {
     fieldName:"percentage",
@@ -461,12 +463,12 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               // groupNestingDepth used for aria
               const groupLevel = props!.groupLevel === undefined ? 0 : props!.groupLevel;
               const headerGroupNestingDepth = groupNestingDepth- groupLevel - 1;
-              const focusZoneProps:IFocusZoneProps = {
+              /* const focusZoneProps:IFocusZoneProps = {
                 "data-is-focusable":true,
-              } as any
+              } as any */
                
               return  <DetailsRow {...props} 
-                focusZoneProps={focusZoneProps} 
+               /*  focusZoneProps={focusZoneProps}  */
                 groupNestingDepth={headerGroupNestingDepth} 
                 item={props!.group} 
                 columns={_columns} 
@@ -572,10 +574,20 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 },
               
                 isSelected && {
-                  color: treeViewColors.SelectedItemInactiveText,
+                  color:treeViewColors.SelectedItemInactiveText,
                   background: treeViewColors.SelectedItemInactive,
                   borderBottom: "none",
                   selectors: {
+                    ['.ms-DetailsRow-cell button.ms-Link']:{
+                      color:treeViewColors.SelectedItemInactiveText
+                    },
+                    '&:active': {
+                      ['.ms-DetailsRow-cell button.ms-Link']:{
+                        color:treeViewColors.SelectedItemActiveText
+                      },
+                    },
+            
+
                     '&:before': {
                       borderTop: "none",
                     },
@@ -609,6 +621,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                         },
                       },
                     },
+                    
                   },
                 },
                 focusStyle,

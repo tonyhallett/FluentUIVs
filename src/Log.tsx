@@ -1,4 +1,4 @@
-import { IButtonStyles, IRawStyle, Label, ActionButton, IActivityItemProps, Icon, ActivityItem } from "@fluentui/react"
+import { IButtonStyles, IRawStyle, Label, ActionButton, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
 import { CSSProperties } from "react"
 import { ToolWindowColors } from "./commonTypes"
 
@@ -108,6 +108,7 @@ export type LogProps = {
     logMessages:LogMessage[],
     clearLogMessages:() => void,
     actionButtonStyles:IButtonStyles,
+    useLinks:boolean
 } & ToolWindowColors
 
 export function Log(props:LogProps) {
@@ -147,17 +148,16 @@ export function Log(props:LogProps) {
             }
           }}>{msgPart.message}</Label>
         }else{
-          const actionButton = <ActionButton 
+          const btn =  props.useLinks ? <Link key={j}>{msgPart.title}</Link> :
+         <ActionButton 
           key={j} 
           ariaLabel={msgPart.ariaLabel}
           iconProps={{iconName:getIconNameForHostObjectMethod(msgPart.hostObject,msgPart.methodName)}} 
           styles={actionButtonStyles}
           onClick={() => {
-            const hostObject = (window as any).chrome.webview.hostObjects[msgPart.hostObject];
-            const hostMethod:Function = hostObject[msgPart.methodName];
-            hostMethod.apply(null,msgPart.arguments);
+            
           }}>{msgPart.title}</ActionButton>
-          return actionButton;
+          return btn;
         }
       })
   
