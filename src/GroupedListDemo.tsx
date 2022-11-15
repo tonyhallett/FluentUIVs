@@ -1,5 +1,5 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps } from "@fluentui/react";
-import { useRef, useState } from "react";
+import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone } from "@fluentui/react";
+import React, { FocusEvent, useEffect, useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
 import { VsColors, VsTheme } from "./themeColors";
@@ -126,13 +126,25 @@ const groups:IDemoGroup[] = [
   }
 ];
 
-
+function StopPropagation(props:{children:React.ReactNode}){
+  return <div  onMouseDown={evt => {
+    evt.stopPropagation();
+  }} onClick={evt => {
+    evt.stopPropagation();
+    
+    }}>
+    {props.children}
+  </div>
+}
 
 
 type IDemoColumn = Omit<IColumn, 'onRender'> & {
   onRenderWithStyles?:(styles:any,useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
 }
+
+
+
 const columns:IDemoColumn[] = [
   {
     fieldName:"name",
@@ -148,7 +160,10 @@ const columns:IDemoColumn[] = [
       const focusColor = CommonControlsColors.FocusVisualText;
       const renderName = item.isGroup;
       if(renderName){
-        return <Text styles={{root:{color:'inherit'}}}>{item.name}</Text>
+        return <Text styles={{
+          root:{
+            color:'inherit',
+          }}}>{item.name}</Text>
       }
       return useLink ? <Link styles={props => {
         const {isDisabled} = props;
@@ -165,20 +180,9 @@ const columns:IDemoColumn[] = [
                 outline: `none`,
               },
             },
-    
+            
           },
-          !isDisabled && {
-            '&:active:hover':{
-              color:environmentColors.PanelHyperlinkPressed,
-            },
-            '&:hover':{
-              color:environmentColors.PanelHyperlinkHover,
-            },
-            '&:focus': {
-              color: environmentColors.PanelHyperlink,
-            },
-  
-          }
+         
         ]
         }}
       }>{item.name}</Link> : 
@@ -194,7 +198,14 @@ const columns:IDemoColumn[] = [
     isSortedDescending: true,
     isResizable:true,
     onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      return <Text styles={{root:{color:'inherit'}}} data-is-focusable={true}>{item.first}</Text>
+      const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText});
+      return <Text styles={
+        {root:{
+          color:'inherit',
+          selectors:{
+            ":focus":focusStyle
+          }
+    }}} data-is-focusable={!item.isGroup}>{item.first}</Text>
     }
   },
   {
@@ -243,8 +254,78 @@ function renderPercentage(percentage:number | null,vsColors:VsColors){
 
 let lastVsColors:VsColors|undefined;
 
+
+class MySelection extends Selection{
+  constructor(){
+    super({selectionMode:SelectionMode.single});
+  }
+  private groupSelections:GroupSelection[] = [];
+  getOrAddGroup(group:IGroup):GroupSelection{
+    let groupSelection = this.groupSelections.find(gs => gs.key == group.key);
+    if(groupSelection == undefined){
+      groupSelection = new GroupSelection(this,group);
+      this.groupSelections.push(groupSelection);
+    }
+    
+    
+    return groupSelection;
+  }
+  public clearSelection(){
+    const selectedIndices = this.getSelectedIndices();
+    if(selectedIndices.length === 1){
+      this.setIndexSelected(selectedIndices[0],false,true);//anchor !
+    }
+  }
+
+  public groupSelected(groupSelection:GroupSelection){
+    this.groupSelections.forEach(gs => {
+      if(gs !== groupSelection){
+        gs.clearSelection();
+      }
+    })
+    this.clearSelection();
+  }
+
+  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
+    console.log(`ItemSelection setIndexSelected ${index} ${isSelected}`);
+    if(isSelected){
+        this.groupSelections.forEach(gs => {
+          gs.setIndexSelected(0,false,false)
+        });
+    }
+    
+    super.setIndexSelected(index, isSelected, shouldAnchor); // anchor
+    
+    
+  }
+}
+
+class GroupSelection extends Selection{
+  public key:string
+  setGroup(group: IGroup | undefined) {
+    this.setItems([group] as any);
+  }
+  constructor(private mainSelection:MySelection,group:IGroup){
+    super({selectionMode:SelectionMode.single});
+    this.setItems([group] as any);
+    this.key = group.key
+  }
+  public clearSelection(){
+    this.setIndexSelected(0,false,false)
+  }
+  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
+    console.log(`GroupSelection setIndexSelected ${this.key} ${index} ${isSelected}`);
+    
+    if(isSelected){
+      this.mainSelection.groupSelected(this);
+    }
+    super.setIndexSelected(index, isSelected, shouldAnchor);
+  }
+}
+
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
+    const selectionRef = useRef<MySelection>(new MySelection());
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
     const {vsColors} = props;
@@ -254,6 +335,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const searchControlColors = vsColors.SearchControlColors;
     const commonControlsColors = vsColors.CommonControlsColors;
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
+
     const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:focusColor});
 
     const toolWindowTextColor = getColor(environmentColors.ToolWindowText);
@@ -451,7 +533,8 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
-        selectionMode={SelectionMode.single}
+        //selectionMode={SelectionMode.single}
+        selection={selectionRef.current}
         checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
         groups={groups}
@@ -463,21 +546,28 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               // groupNestingDepth used for aria
               const groupLevel = props!.groupLevel === undefined ? 0 : props!.groupLevel;
               const headerGroupNestingDepth = groupNestingDepth- groupLevel - 1;
-              /* const focusZoneProps:IFocusZoneProps = {
-                "data-is-focusable":true,
-              } as any */
-               
-              return  <DetailsRow {...props} 
-               /*  focusZoneProps={focusZoneProps}  */
+              const focusZoneProps:IFocusZoneProps = {
+                "data-is-focusable":false,
+              } as any 
+              const groupSelection = selectionRef.current.getOrAddGroup(props!.group!);
+              
+              
+              return <StopPropagation><SelectionZone selection={groupSelection} >
+
+              
+              <DetailsRow {...props} 
+               selection={groupSelection}
+               focusZoneProps={focusZoneProps}
                 groupNestingDepth={headerGroupNestingDepth} 
                 item={props!.group} 
                 columns={_columns} 
                 selectionMode={SelectionMode.none} 
-                itemIndex={props!.groupIndex!}
+                itemIndex={0}
                 onRenderItemColumn={onRenderItemColumn}
-                styles={
-                  {
-                    root: {
+                styles={(styleProps) => {
+                  const {isSelected} = styleProps
+                  return {
+                    root: [{
                       background:"inherit",
                       borderBottom:"none",
                       color:"inherit",
@@ -488,9 +578,16 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                         }
                       }
                     },
+                    isSelected && {
+                      background:"orange"
+                    },
+                    focusStyle
+                    ]
                   }
-                }
+                }}
                 />
+                </SelectionZone>
+                </StopPropagation>  
             }
           },
           onRenderHeader: (props:IGroupHeaderProps|undefined, defaultRender) => {
@@ -569,6 +666,14 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                     "&:hover":{
                       background:treeViewColors.Background, // mirroring vs, docs say "transparent",
                       color:environmentColors.CommandBarTextActive,
+                      selectors: {
+                        [`.ms-DetailsRow-cell > .ms-Link`]: {
+                          color: environmentColors.PanelHyperlink,
+                          textDecoration:"underline",
+                          cursor:"pointer"
+                        }
+                      },
+    
                     }
                   }
                 },
@@ -626,6 +731,12 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 },
                 focusStyle,
               ],
+              // todo requires override ?
+              /* cell:{
+                selectors:{
+                  "[data-is-focusable='true']":
+                }
+              } */
             }
           };
           rowProps!.groupNestingDepth = 2; // todo calculate

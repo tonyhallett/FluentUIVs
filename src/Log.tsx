@@ -1,6 +1,8 @@
-import { IButtonStyles, IRawStyle, Label, ActionButton, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
+import { IButtonStyles, IRawStyle, Label, Text, ActionButton, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
 import { CSSProperties } from "react"
 import { ToolWindowColors } from "./commonTypes"
+import { VsColors } from "./themeColors"
+import { getLinkStyle } from "./themeStyles"
 
 export enum Emphasis{
     None = 0,
@@ -108,11 +110,12 @@ export type LogProps = {
     logMessages:LogMessage[],
     clearLogMessages:() => void,
     actionButtonStyles:IButtonStyles,
-    useLinks:boolean
+    useLinks:boolean,
+    vsColors:VsColors
 } & ToolWindowColors
 
 export function Log(props:LogProps) {
-    const {logMessages, clearLogMessages, toolWindowBackground, toolWindowText, actionButtonStyles} = props;
+    const {logMessages, clearLogMessages, toolWindowBackground, toolWindowText, actionButtonStyles, useLinks, vsColors} = props;
     var root = actionButtonStyles.root!;
     if(Array.isArray(root)){
       root.push({marginLeft:"10px"})
@@ -126,8 +129,6 @@ export function Log(props:LogProps) {
       logMessage.message.map((msgPart,j) => {
         if(msgPart.type === 'emphasized' ){
           const emphasisStyle:CSSProperties={
-            //fontFamily:getFontFamily(styling.fontName),
-            //fontSize:styling.fontSize,
             color:toolWindowText,
             backgroundColor:toolWindowBackground
           }
@@ -140,15 +141,24 @@ export function Log(props:LogProps) {
           if(msgPart.emphasis & Emphasis.Underline){
             emphasisStyle.textDecoration = 'underline';
           }
-          //return <span key={j} style={emphasisStyle}>{msgPart.message}</span>;
-          return <Label key={j} styles={{
+          return useLinks ? 
+           <span key={j} style={{
+            
+            ...emphasisStyle as any,
+            display:"inline"
+          }}>{msgPart.message}</span> : <Text key={j} styles={{
             root:{
                 ...emphasisStyle as any,
-                display:"inline"
+                color:vsColors.EnvironmentColors.ToolWindowText
             }
-          }}>{msgPart.message}</Label>
+          }}>{msgPart.message}</Text>
         }else{
-          const btn =  props.useLinks ? <Link key={j}>{msgPart.title}</Link> :
+          // issue with fontSize and fontWeight inheriting
+          const btn =  useLinks ? <Link key={j} styles={props => {
+            const linkStyle =  getLinkStyle(props,vsColors);
+            (linkStyle.root as any).push({marginLeft:"5px"});
+            return linkStyle;
+          }}>{msgPart.title}</Link> :
          <ActionButton 
           key={j} 
           ariaLabel={msgPart.ariaLabel}
@@ -175,12 +185,14 @@ export function Log(props:LogProps) {
           iconName={getIconNameForContext(logMessage.context)}/>,
         isCompact:false,
         styles:{
-            root:{
+            root:[
+              !useLinks && {
               alignItems:"center"
-            },
-            activityTypeIcon:{
+            }],
+            activityTypeIcon:[
+              !useLinks && {
               height:"16px"
-            }
+            }]
         }
       }
       

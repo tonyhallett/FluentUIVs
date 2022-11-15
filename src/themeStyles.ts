@@ -1,4 +1,4 @@
-import { getFocusStyle } from "@fluentui/react";
+import { getFocusStyle, ILinkStyleProps } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 
 export const buttonHighContrastFocus = {
@@ -55,3 +55,38 @@ export function getActionButtonStyles(vsColors:VsColors){
     }
     return actionButtonStyles
   }
+
+  export function getLinkStyle(props:ILinkStyleProps,vsColors:VsColors){
+    const {isDisabled} = props;
+    const {EnvironmentColors: environmentColors, CommonControlsColors} = vsColors;
+    const focusColor = CommonControlsColors.FocusVisualText;
+  
+    return {
+      root:[{
+        color:environmentColors.PanelHyperlink,
+        selectors: {
+          '.ms-Fabric--isFocusVisible &:focus': {
+            // Can't use getFocusStyle because it doesn't support wrapping links
+            // https://github.com/microsoft/fluentui/issues/4883#issuecomment-406743543
+            // Using box-shadow and outline allows the focus rect to wrap links that span multiple lines
+            // and helps the focus rect avoid getting clipped.
+            boxShadow: `0 0 0 1px ${focusColor} inset`,
+            outline: `none`,
+          },
+        },
+  
+      },
+      !isDisabled && {
+        '&:active:hover':{
+          color:environmentColors.PanelHyperlinkPressed,
+        },
+        '&:hover':{
+          color:environmentColors.PanelHyperlinkHover,
+        },
+        '&:focus': {
+          color: environmentColors.PanelHyperlink,
+        },
+  
+      }
+    ]
+    }}
