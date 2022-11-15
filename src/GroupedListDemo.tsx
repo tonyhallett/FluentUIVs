@@ -1,4 +1,4 @@
-import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone } from "@fluentui/react";
+import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey } from "@fluentui/react";
 import React, { FocusEvent, useEffect, useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
@@ -323,11 +323,134 @@ class GroupSelection extends Selection{
   }
 }
 
+class GroupsItemsSelection extends Selection{
+  constructor(groups:IGroup[]){
+    super({selectionMode:SelectionMode.single});
+    groups.forEach(group => this.addGroup(group));
+  }
+  private addGroup(group:IGroup){
+    this.groups.push(group);
+    if(group.children){
+      group.children.forEach(g => this.addGroup(g))
+    }
+  }
+  private itemsLength:number | undefined;
+  private groups:IGroup[] = [];
+  public setItems(items: any[], shouldClear: boolean = true): void {
+    this.itemsLength = items.length;
+    // will need to clear groups from before ?????????
+    super.setItems(items.concat(this.groups), shouldClear);
+  }
+  
+  public getItems() : any[] {
+    const items = super.getItems();
+    return items;
+  }
+  
+  public getGroupIndex(group:IGroup):number{
+    
+    const items = this.getItems();
+    const groups = items.slice(this.itemsLength);
+    let groupIndex = groups.findIndex(g => g.key === group.key);
+    return groupIndex + this.itemsLength!;
+  }
+
+  public getSelection(): any[] {
+    console.log("getSelection");
+    const selection =  super.getSelection();
+    return selection;
+  }
+
+  public getSelectedCount(): number{
+
+    const selectedCount =  super.getSelectedCount();
+    if(selectedCount > 1){
+      console.log("MORE THAN ONE ****************************************")
+    }
+    return selectedCount;
+  }
+
+  public getSelectedIndices():number[]{
+    const selectedIndices =  super.getSelectedIndices();
+    console.log("getSelectedIndices");
+    return selectedIndices
+  }
+  public getItemIndex(key: string):number{
+    const itemIndex = super.getItemIndex(key);
+    console.log(`getItemIndex ${key} - ${itemIndex}`)
+    return itemIndex;
+  }
+
+  public isRangeSelected(fromIndex: number, count: number): boolean{
+    return super.isRangeSelected(fromIndex,count);
+  }
+
+  public isAllSelected(): boolean{
+    return super.isAllSelected();
+  }
+
+  public isKeySelected(key: string): boolean {
+    return super.isKeySelected(key);
+  }
+
+  public isIndexSelected(index: number): boolean{
+    return super.isIndexSelected(index);
+  }
+
+  public setAllSelected(isAllSelected: boolean): void{
+    if(isAllSelected){
+      console.log("setting all to selected ***********************************************")
+    }
+    super.setAllSelected(isAllSelected);
+  }
+
+  public setKeySelected(key: string, isSelected: boolean, shouldAnchor: boolean): void{
+    super.setKeySelected(key,isSelected,shouldAnchor);
+  }
+
+  public setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
+    super.setIndexSelected(index,isSelected,shouldAnchor);
+  }
+
+  public setRangeSelected(fromIndex: number, count: number, isSelected: boolean, shouldAnchor: boolean): void {
+    super.setRangeSelected(fromIndex,count,isSelected,shouldAnchor);
+  }
+
+  public selectToKey(key: string, clearSelection?: boolean): void {
+    super.selectToKey(key,clearSelection);
+  }
+
+  public selectToRange(fromIndex: number, count: number, clearSelection?: boolean): void {
+    super.selectToRange(fromIndex, count, clearSelection);
+  }
+
+  public selectToIndex(index: number, clearSelection?: boolean): void {
+    super.selectToIndex(index, clearSelection);
+  }
+
+  public toggleAllSelected(): void {
+    super.toggleAllSelected();
+  }
+
+  public toggleKeySelected(key: string): void {
+    super.toggleKeySelected(key);
+  }
+
+  public toggleIndexSelected(index: number): void {
+    super.toggleIndexSelected(index);
+  }
+
+  public toggleRangeSelected(fromIndex: number, count: number): void {
+    super.toggleRangeSelected(fromIndex, count);
+  }
+}
+
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
-    const selectionRef = useRef<MySelection>(new MySelection());
+    //const selectionRef = useRef<GroupsItemsSelection>(new GroupsItemsSelection());
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
+    const selection = new GroupsItemsSelection(groups);
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
@@ -534,7 +657,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
         //selectionMode={SelectionMode.single}
-        selection={selectionRef.current}
+        selection={selection}
         checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
         groups={groups}
@@ -547,22 +670,23 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               const groupLevel = props!.groupLevel === undefined ? 0 : props!.groupLevel;
               const headerGroupNestingDepth = groupNestingDepth- groupLevel - 1;
               const focusZoneProps:IFocusZoneProps = {
-                "data-is-focusable":false,
+                "data-is-focusable":true,
               } as any 
-              const groupSelection = selectionRef.current.getOrAddGroup(props!.group!);
+              //const groupSelection = selectionRef.current.getOrAddGroup(props!.group!);
               
+              const index = selection.getGroupIndex(props!.group!);
+              //<StopPropagation>
+              //<SelectionZone selection={selectionRef.current} >
+              console.log(`Group ${props!.group!.key} selected : ${props?.selected}`)
               
-              return <StopPropagation><SelectionZone selection={groupSelection} >
-
-              
-              <DetailsRow {...props} 
-               selection={groupSelection}
+              return <DetailsRow {...props} 
+               selection={selection}
                focusZoneProps={focusZoneProps}
                 groupNestingDepth={headerGroupNestingDepth} 
                 item={props!.group} 
                 columns={_columns} 
                 selectionMode={SelectionMode.none} 
-                itemIndex={0}
+                itemIndex={index}
                 onRenderItemColumn={onRenderItemColumn}
                 styles={(styleProps) => {
                   const {isSelected} = styleProps
@@ -586,8 +710,8 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                   }
                 }}
                 />
-                </SelectionZone>
-                </StopPropagation>  
+                //</SelectionZone>
+                //</StopPropagation>  
             }
           },
           onRenderHeader: (props:IGroupHeaderProps|undefined, defaultRender) => {
