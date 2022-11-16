@@ -1,4 +1,4 @@
-import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode } from "@fluentui/react";
+import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode, IContextualMenuItem, ContextualMenu } from "@fluentui/react";
 import React, { useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
@@ -292,8 +292,14 @@ class GroupsItemsSelection extends Selection {
 
 const groupHeaderRowClassName = "groupHeaderRow";
 
+interface IContextMenuDetails{
+  items:IContextualMenuItem[],
+  target:MouseEvent
+}
+
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
+    const [contextMenuDetails, setContextMenuDetails] = useState<IContextMenuDetails>();
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
     const selection = new GroupsItemsSelection(groups);
@@ -415,7 +421,18 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       }
     }
     lastVsColors = vsColors;
+
+    const onHideContextualMenu = React.useCallback(() => setContextMenuDetails(undefined), []);
+    const contextMenu = contextMenuDetails ? <ContextualMenu 
+      items={contextMenuDetails.items} 
+      target={contextMenuDetails.target}
+      onItemClick={onHideContextualMenu}
+      onDismiss={onHideContextualMenu}
+      >
+        
+    </ContextualMenu> : undefined;
     return <div>
+      {contextMenu}
       <Stack horizontal horizontalAlign='space-between' verticalAlign='center'>
       <Slider styles={sliderStyles} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
               return "The value";
@@ -512,9 +529,24 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
           if(item){
             const demoItem = item as IDemoItem;
             const contextMenuOn = demoItem.isGroup ? "group" : "item";
+            const groupOrItemAndName = `${contextMenuOn} ${demoItem.name}`;
             const mouseEvent = evt as MouseEvent
-            const contextMenuAt = `${mouseEvent.clientX}, ${mouseEvent.clientY}`
-            console.log(`cm on ${contextMenuOn} ${demoItem.name} - ${contextMenuAt}`)
+            setContextMenuDetails({
+              items:[
+                
+                  {
+                    key:'clipboard',
+                    text:`Copy to clipboard ${groupOrItemAndName} ?`,
+                    onClick: (ev) => {
+                      navigator.clipboard.writeText(`Todo for - ${groupOrItemAndName}`)
+                      //ev.preventDefault();
+                    },
+      
+                  }
+                
+              ],
+              target:mouseEvent
+            })
           }
         }}
         groupProps={{
