@@ -1,8 +1,8 @@
-import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, GroupHeader, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupedListProps, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey } from "@fluentui/react";
-import React, { FocusEvent, useEffect, useRef, useState } from "react";
+import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode } from "@fluentui/react";
+import React, { useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { sliderClassNames } from "./globalClassNames";
-import { VsColors, VsTheme } from "./themeColors";
+import { VsColors } from "./themeColors";
 import { buttonHighContrastFocus, getActionButtonStyles } from "./themeStyles";
 
 /*
@@ -126,24 +126,14 @@ const groups:IDemoGroup[] = [
   }
 ];
 
-function StopPropagation(props:{children:React.ReactNode}){
-  return <div  onMouseDown={evt => {
-    evt.stopPropagation();
-  }} onClick={evt => {
-    evt.stopPropagation();
-    
-    }}>
-    {props.children}
-  </div>
-}
-
-
 type IDemoColumn = Omit<IColumn, 'onRender'> & {
   onRenderWithStyles?:(styles:any,useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
 }
 
-
+function getVsFocusStyle(vsColors:VsColors) {
+  return getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText})
+}
 
 const columns:IDemoColumn[] = [
   {
@@ -160,10 +150,11 @@ const columns:IDemoColumn[] = [
       const focusColor = CommonControlsColors.FocusVisualText;
       const renderName = item.isGroup;
       if(renderName){
-        return <Text styles={{
-          root:{
+        return <Text data-is-focusable={true} styles={{
+          root:[{
             color:'inherit',
-          }}}>{item.name}</Text>
+          },getVsFocusStyle(vsColors)
+        ]}}>{item.name}</Text>
       }
       return useLink ? <Link styles={props => {
         const {isDisabled} = props;
@@ -186,7 +177,10 @@ const columns:IDemoColumn[] = [
         ]
         }}
       }>{item.name}</Link> : 
-       <span><ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton><span style={{marginLeft:"5px"}}>{item.name}</span></span>
+       <span>
+        <ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton>
+        <span style={{marginLeft:"5px"}}>{item.name}</span>
+        </span>
     }
   },
   {
@@ -198,14 +192,14 @@ const columns:IDemoColumn[] = [
     isSortedDescending: true,
     isResizable:true,
     onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText});
-      return <Text styles={
+      const focusStyle = getVsFocusStyle(vsColors);
+      return <CopyToClipboard><Text styles={
         {root:{
           color:'inherit',
           selectors:{
             ":focus":focusStyle
           }
-    }}} data-is-focusable={!item.isGroup}>{item.first}</Text>
+    }}} data-is-focusable={true}>{item.first}</Text></CopyToClipboard>
     }
   },
   {
@@ -254,98 +248,38 @@ function renderPercentage(percentage:number | null,vsColors:VsColors){
 
 let lastVsColors:VsColors|undefined;
 
+function CopyToClipboard(props:{children:any}){
+  return <span onKeyUp={evt => {
+    if(evt.ctrlKey && evt.key === "c"){
+      const text = (evt.target as Element).textContent;
 
-class MySelection extends Selection{
-  constructor(){
-    super({selectionMode:SelectionMode.single});
-  }
-  private groupSelections:GroupSelection[] = [];
-  getOrAddGroup(group:IGroup):GroupSelection{
-    let groupSelection = this.groupSelections.find(gs => gs.key == group.key);
-    if(groupSelection == undefined){
-      groupSelection = new GroupSelection(this,group);
-      this.groupSelections.push(groupSelection);
+      navigator.clipboard.writeText(text!);
     }
-    
-    
-    return groupSelection;
-  }
-  public clearSelection(){
-    const selectedIndices = this.getSelectedIndices();
-    if(selectedIndices.length === 1){
-      this.setIndexSelected(selectedIndices[0],false,true);//anchor !
-    }
-  }
-
-  public groupSelected(groupSelection:GroupSelection){
-    this.groupSelections.forEach(gs => {
-      if(gs !== groupSelection){
-        gs.clearSelection();
-      }
-    })
-    this.clearSelection();
-  }
-
-  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
-    console.log(`ItemSelection setIndexSelected ${index} ${isSelected}`);
-    if(isSelected){
-        this.groupSelections.forEach(gs => {
-          gs.setIndexSelected(0,false,false)
-        });
-    }
-    
-    super.setIndexSelected(index, isSelected, shouldAnchor); // anchor
-    
-    
-  }
+  }} >{props.children}</span>
 }
 
-class GroupSelection extends Selection{
-  public key:string
-  setGroup(group: IGroup | undefined) {
-    this.setItems([group] as any);
-  }
-  constructor(private mainSelection:MySelection,group:IGroup){
-    super({selectionMode:SelectionMode.single});
-    this.setItems([group] as any);
-    this.key = group.key
-  }
-  public clearSelection(){
-    this.setIndexSelected(0,false,false)
-  }
-  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
-    console.log(`GroupSelection setIndexSelected ${this.key} ${index} ${isSelected}`);
-    
-    if(isSelected){
-      this.mainSelection.groupSelected(this);
-    }
-    super.setIndexSelected(index, isSelected, shouldAnchor);
-  }
-}
+class GroupsItemsSelection extends Selection {
+  private itemsLength:number | undefined;
+  private groups:IGroup[] = [];
 
-class GroupsItemsSelection extends Selection{
   constructor(groups:IGroup[]){
     super({selectionMode:SelectionMode.single});
     groups.forEach(group => this.addGroup(group));
   }
+
   private addGroup(group:IGroup){
     this.groups.push(group);
     if(group.children){
       group.children.forEach(g => this.addGroup(g))
     }
   }
-  private itemsLength:number | undefined;
-  private groups:IGroup[] = [];
+  
   public setItems(items: any[], shouldClear: boolean = true): void {
     this.itemsLength = items.length;
-    // will need to clear groups from before ?????????
     super.setItems(items.concat(this.groups), shouldClear);
   }
   
-  public getItems() : any[] {
-    const items = super.getItems();
-    return items;
-  }
+  
   
   public getGroupIndex(group:IGroup):number{
     
@@ -354,100 +288,12 @@ class GroupsItemsSelection extends Selection{
     let groupIndex = groups.findIndex(g => g.key === group.key);
     return groupIndex + this.itemsLength!;
   }
-
-  public getSelection(): any[] {
-    console.log("getSelection");
-    const selection =  super.getSelection();
-    return selection;
-  }
-
-  public getSelectedCount(): number{
-
-    const selectedCount =  super.getSelectedCount();
-    if(selectedCount > 1){
-      console.log("MORE THAN ONE ****************************************")
-    }
-    return selectedCount;
-  }
-
-  public getSelectedIndices():number[]{
-    const selectedIndices =  super.getSelectedIndices();
-    console.log("getSelectedIndices");
-    return selectedIndices
-  }
-  public getItemIndex(key: string):number{
-    const itemIndex = super.getItemIndex(key);
-    console.log(`getItemIndex ${key} - ${itemIndex}`)
-    return itemIndex;
-  }
-
-  public isRangeSelected(fromIndex: number, count: number): boolean{
-    return super.isRangeSelected(fromIndex,count);
-  }
-
-  public isAllSelected(): boolean{
-    return super.isAllSelected();
-  }
-
-  public isKeySelected(key: string): boolean {
-    return super.isKeySelected(key);
-  }
-
-  public isIndexSelected(index: number): boolean{
-    return super.isIndexSelected(index);
-  }
-
-  public setAllSelected(isAllSelected: boolean): void{
-    if(isAllSelected){
-      console.log("setting all to selected ***********************************************")
-    }
-    super.setAllSelected(isAllSelected);
-  }
-
-  public setKeySelected(key: string, isSelected: boolean, shouldAnchor: boolean): void{
-    super.setKeySelected(key,isSelected,shouldAnchor);
-  }
-
-  public setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
-    super.setIndexSelected(index,isSelected,shouldAnchor);
-  }
-
-  public setRangeSelected(fromIndex: number, count: number, isSelected: boolean, shouldAnchor: boolean): void {
-    super.setRangeSelected(fromIndex,count,isSelected,shouldAnchor);
-  }
-
-  public selectToKey(key: string, clearSelection?: boolean): void {
-    super.selectToKey(key,clearSelection);
-  }
-
-  public selectToRange(fromIndex: number, count: number, clearSelection?: boolean): void {
-    super.selectToRange(fromIndex, count, clearSelection);
-  }
-
-  public selectToIndex(index: number, clearSelection?: boolean): void {
-    super.selectToIndex(index, clearSelection);
-  }
-
-  public toggleAllSelected(): void {
-    super.toggleAllSelected();
-  }
-
-  public toggleKeySelected(key: string): void {
-    super.toggleKeySelected(key);
-  }
-
-  public toggleIndexSelected(index: number): void {
-    super.toggleIndexSelected(index);
-  }
-
-  public toggleRangeSelected(fromIndex: number, count: number): void {
-    super.toggleRangeSelected(fromIndex, count);
-  }
 }
+
+const groupHeaderRowClassName = "groupHeaderRow";
 
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
-    //const selectionRef = useRef<GroupsItemsSelection>(new GroupsItemsSelection());
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
     const selection = new GroupsItemsSelection(groups);
@@ -459,7 +305,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const commonControlsColors = vsColors.CommonControlsColors;
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
 
-    const focusStyle = getFocusStyle(null as any, {borderColor:"transparent", outlineColor:focusColor});
+    const focusStyle = getVsFocusStyle(vsColors);
 
     const toolWindowTextColor = getColor(environmentColors.ToolWindowText);
     const toolWindowTextDark = isDark(toolWindowTextColor);
@@ -471,7 +317,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
           width:200
       },
       slideBox: [
-          getFocusStyle(null as any,{borderColor: 'transparent',outlineColor:focusColor}),
+          focusStyle,
           {
             
             selectors: {
@@ -656,12 +502,21 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
-        //selectionMode={SelectionMode.single}
         selection={selection}
+        selectionMode={SelectionMode.single} // due to defaultProps ! does not take from selection !
         checkboxVisibility={CheckboxVisibility.hidden}
         items={items} 
         groups={groups}
         columns={columns}
+        onItemContextMenu={(item, index, evt) => {
+          if(item){
+            const demoItem = item as IDemoItem;
+            const contextMenuOn = demoItem.isGroup ? "group" : "item";
+            const mouseEvent = evt as MouseEvent
+            const contextMenuAt = `${mouseEvent.clientX}, ${mouseEvent.clientY}`
+            console.log(`cm on ${contextMenuOn} ${demoItem.name} - ${contextMenuAt}`)
+          }
+        }}
         groupProps={{
           showEmptyGroups:false,
           headerProps:{
@@ -672,20 +527,18 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               const focusZoneProps:IFocusZoneProps = {
                 "data-is-focusable":true,
               } as any 
-              //const groupSelection = selectionRef.current.getOrAddGroup(props!.group!);
               
               const index = selection.getGroupIndex(props!.group!);
-              //<StopPropagation>
-              //<SelectionZone selection={selectionRef.current} >
-              console.log(`Group ${props!.group!.key} selected : ${props?.selected}`)
               
               return <DetailsRow {...props} 
+               className={groupHeaderRowClassName}
                selection={selection}
                focusZoneProps={focusZoneProps}
                 groupNestingDepth={headerGroupNestingDepth} 
                 item={props!.group} 
                 columns={_columns} 
-                selectionMode={SelectionMode.none} 
+                selectionMode={SelectionMode.single} 
+                checkboxVisibility={CheckboxVisibility.hidden}
                 itemIndex={index}
                 onRenderItemColumn={onRenderItemColumn}
                 styles={(styleProps) => {
@@ -702,27 +555,85 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                         }
                       }
                     },
-                    isSelected && {
-                      background:"orange"
-                    },
+                    isSelected && { // todo this is common with onRenderRow - refactor
+                      color:treeViewColors.SelectedItemInactiveText,
+                      background: treeViewColors.SelectedItemInactive,
+                      borderBottom: "none",
+                      selectors: {
+                        ['.ms-DetailsRow-cell button.ms-Link']:{
+                          color:treeViewColors.SelectedItemInactiveText
+                        },
+                        '&:active': {
+                          ['.ms-DetailsRow-cell button.ms-Link']:{
+                            color:treeViewColors.SelectedItemActiveText
+                          },
+                        },
+                
+      
+                        '&:before': {
+                          borderTop: "none",
+                        },
+                
+                        // Selected State hover
+                        '&:hover': {
+                          color: treeViewColors.SelectedItemInactiveText,
+                          background: treeViewColors.SelectedItemInactive,
+                        },
+                
+                        // Focus state
+                        '&:focus': {
+                          color: treeViewColors.SelectedItemActiveText,
+                          background: treeViewColors.SelectedItemActive,
+                          selectors: {
+                            [`.ms-DetailsRow-cell`]: {
+                              color: treeViewColors.SelectedItemActiveText,
+                              background: treeViewColors.SelectedItemActive,
+                            },
+                          },
+                        },
+                
+                        // Focus and hover state
+                        '&:focus:hover': {
+                          color: treeViewColors.SelectedItemActiveText,
+                          background: treeViewColors.SelectedItemActive,
+                          selectors: {
+                            [`.ms-DetailsRow-cell`]: {
+                              color: treeViewColors.SelectedItemActiveText,
+                              background: treeViewColors.SelectedItemActive,
+                            },
+                          },
+                        },
+                        
+                      }},
                     focusStyle
                     ]
                   }
                 }}
                 />
-                //</SelectionZone>
-                //</StopPropagation>  
             }
           },
           onRenderHeader: (props:IGroupHeaderProps|undefined, defaultRender) => {
             _columns = (props as any).columns; // ****************************** any cast
+            props!.onGroupHeaderKeyUp = ev => {
+              const leftOrRightArrow = ev.code === 'ArrowRight' || ev.code === 'ArrowLeft';
+              if(leftOrRightArrow){
+                const groupHeaderRow = (ev.target as Element).closest(`.${groupHeaderRowClassName}`);
+                if(groupHeaderRow){
+                  ev.preventDefault()
+                }
+              }
+              
+
+            }
+            props!.expandButtonProps = {
+              'aria-label': 'expand collapse group',
+              'data-is-focusable':'true'
+            } as any
             const styles:IGroupHeaderProps["styles"] = styleProps  => {
-              const {selected} = styleProps
               return {
               root:[{
                 borderBottom: `1px solid ${headerColors.SeparatorLine}`,
-                //borderTop: `1px solid ${headerColors.SeparatorLine}`,
-
+                userSelect:'text',
                 background:headerColors.Default,
                 color: environmentColors.CommandBarTextActive, // *** mirroring vs, alt headerColors.DefaultText
                 selectors: {
@@ -730,10 +641,14 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                     background: headerColors.MouseOver,
                     color: environmentColors.CommandBarTextHover // *** mirroring vs, alt headerColors.MouseOverText,
                   },
-                }
-              },focusStyle
+                },
+                
+              },
+              
+              
+              focusStyle
               ],
-              expand:{  
+              expand:[{  
                 color:headerColors.Glyph,
                 selectors: { // ignoring selected state
                   ':hover': {
@@ -745,7 +660,9 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                     backgroundColor: headerColors.MouseDown
                   },
                 },
-              },
+                
+                },focusStyle
+              ],
               cellSizer: [
                 {
                   selectors: {
