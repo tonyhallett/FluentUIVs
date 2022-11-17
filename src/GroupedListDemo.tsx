@@ -247,6 +247,7 @@ function renderPercentage(percentage:number | null,vsColors:VsColors){
 
 
 let lastVsColors:VsColors|undefined;
+let lastUseLink:boolean | undefined
 
 function CopyToClipboard(props:{children:any}){
   return <span onKeyUp={evt => {
@@ -261,12 +262,23 @@ function CopyToClipboard(props:{children:any}){
 class GroupsItemsSelection extends Selection {
   private itemsLength:number | undefined;
   private groups:IGroup[] = [];
-
-  constructor(groups:IGroup[]){
+  private static instanceCount:number = 0;
+  private instanceId:number;
+  constructor(){
+    super({selectionMode:SelectionMode.single});
+    this.instanceId = GroupsItemsSelection.instanceCount++;
+  }
+  public initialize(groups:IGroup[], items:any[]){
+    groups.forEach(group => this.addGroup(group));
+    this.setItemsPrivate(items);
+  }
+  /* constructor(groups:IGroup[], items:any[]){
     super({selectionMode:SelectionMode.single});
     groups.forEach(group => this.addGroup(group));
+    this.setItemsPrivate(items);
+    this.instanceId = GroupsItemsSelection.instanceCount++;
   }
-
+ */
   private addGroup(group:IGroup){
     this.groups.push(group);
     if(group.children){
@@ -275,18 +287,26 @@ class GroupsItemsSelection extends Selection {
   }
   
   public setItems(items: any[], shouldClear: boolean = true): void {
-    this.itemsLength = items.length;
-    super.setItems(items.concat(this.groups), shouldClear);
   }
   
-  
+  private setItemsPrivate(items: any[]){
+    this.itemsLength = items.length;
+    super.setItems(items.concat(this.groups), false);
+  }
   
   public getGroupIndex(group:IGroup):number{
-    
     const items = this.getItems();
     const groups = items.slice(this.itemsLength);
     let groupIndex = groups.findIndex(g => g.key === group.key);
     return groupIndex + this.itemsLength!;
+  }
+
+  setKeySelected(key: string, isSelected: boolean, shouldAnchor: boolean): void {
+    super.setKeySelected(key, isSelected, shouldAnchor);
+  }
+
+  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
+    super.setIndexSelected(index, isSelected, shouldAnchor);
   }
 }
 
@@ -302,7 +322,11 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const [contextMenuDetails, setContextMenuDetails] = useState<IContextMenuDetails>();
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
-    const selection = new GroupsItemsSelection(groups);
+    const selectionRef = useRef<GroupsItemsSelection>(new GroupsItemsSelection());
+
+    const selection = selectionRef.current;
+    selection.initialize(groups,items);
+
     const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
@@ -408,7 +432,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     }
     columns.forEach(c => c.styles=columnStyles);
 
-    const needsNewVersion = lastVsColors !== vsColors;
+    const needsNewVersion = lastVsColors !== vsColors || props.useLink !== lastUseLink;
     if(needsNewVersion){
       detailsListRef.current?.forceUpdate();
     }
@@ -421,6 +445,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       }
     }
     lastVsColors = vsColors;
+    lastUseLink = props.useLink;
 
     const onHideContextualMenu = React.useCallback(() => setContextMenuDetails(undefined), []);
     const contextMenu = contextMenuDetails ? <ContextualMenu 

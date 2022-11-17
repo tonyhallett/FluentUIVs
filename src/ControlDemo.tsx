@@ -1,10 +1,10 @@
-import { ActionButton, Checkbox, Dropdown, getFocusStyle, ICheckboxProps, IDropdownOption, Link } from "@fluentui/react";
+import { ActionButton, Checkbox, Dropdown, getFocusStyle, IButtonStyles, ICheckboxProps, IDropdownOption, Link } from "@fluentui/react";
 import React, { useState } from "react";
 import { dropDownClassNames } from "./globalClassNames";
 import { VsColors } from "./themeColors";
 import { buttonHighContrastFocus } from "./themeStyles";
 
-export function ControlsDemo(props:{actionButtonStyles:any,checkBoxStyles:ICheckboxProps['styles'],vsColors:VsColors}){ //todo type
+export function ControlsDemo(props:{actionButtonStyles:IButtonStyles,checkBoxStyles:ICheckboxProps['styles'],vsColors:VsColors}){ //todo type
     const [buttonDisabled,setButtonDisabled] = useState(true);
     const [selectedDropDownOption, setSelectedDropDownOptions] = useState<IDropdownOption>();
     const dropDownOptions: IDropdownOption[] = [

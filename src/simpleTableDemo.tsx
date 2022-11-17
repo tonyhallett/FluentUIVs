@@ -2,7 +2,8 @@ import { IDetailsListProps, DetailsList, CheckboxVisibility, SelectionMode, getF
 
 type SimpleTableProps = Omit<IDetailsListProps,'role'|'checkboxVisibility'|'isHeaderVisible'|'selectionMode'|'focusZoneProps'|'onRenderRow'> 
 & {
-  environmentCommandBarTextActive:string
+  environmentCommandBarTextActive:string,
+  treeViewColorsBackground:string
 }
 
 function SimpleTable(props:SimpleTableProps){
@@ -54,8 +55,8 @@ const summaryRows: { key: string; display: string; }[] = [];
   summaryRows.push({ key: 'Coverable lines :', display: "13" });
   summaryRows.push({ key: 'Total lines :', display: "20" });
 
-export function SimpleTableDemo(props:{environmentColorsCommandBarTextActive:string}){
-    return <SimpleTable environmentCommandBarTextActive={props.environmentColorsCommandBarTextActive}
+export function SimpleTableDemo(props:{environmentColorsCommandBarTextActive:string, treeViewColorsBackground:string}){
+    return <SimpleTable treeViewColorsBackground={props.treeViewColorsBackground} environmentCommandBarTextActive={props.environmentColorsCommandBarTextActive}
         items={summaryRows}
         
         columns={[

@@ -2,29 +2,36 @@ import { ActionButton, Checkbox, IButtonProps, ICheckboxProps, ILabelProps, Labe
 import { useState } from "react";
 import { Long, Wide } from "./LongAndWide";
 
-export function MakeChange(props:{
+export interface IMakeChangeProps{
     checkBoxStyles:ICheckboxProps['styles'],
     actionButtonStyles:IButtonProps['styles'],
     labelStyles:ILabelProps['styles'],
     nextTheme:IButtonProps['onClick'],
+    previousTheme:IButtonProps['onClick'],
     selectedThemeName:string,
     coverageRunning:boolean,
     coverageRunningToggled:ICheckboxProps['onChange'],
     useHyperlink:boolean,
     useHyperlinkToggled:ICheckboxProps['onChange'],
-    }){
-    const [addScrollbars,setAddScrollbars] = useState(false);
+    toolWindowBackground:string,
+    toolWindowBorder:string,
+    addScrollbars:boolean,
+    toggleAddScrollbars:ICheckboxProps['onChange']
+    }
+
+export function MakeChange(props:IMakeChangeProps){
+    
     return <div>
         <Checkbox styles={props.checkBoxStyles} label="Use hyperlink"  checked={props.useHyperlink} onChange={props.useHyperlinkToggled}/>
         <Label styles={props.labelStyles}>{props.selectedThemeName}</Label>
-        <ActionButton iconProps={{iconName:"github"}} styles={
+        
+        <ActionButton iconProps={{iconName:"previous"}} styles={
+            props.actionButtonStyles
+        } onClick={props.previousTheme}>Previous theme</ActionButton>
+        <ActionButton iconProps={{iconName:"next"}} styles={
             props.actionButtonStyles
         } onClick={props.nextTheme}>Next theme</ActionButton>
-        <Checkbox styles={props.checkBoxStyles} label="Add scrollbars"  checked={addScrollbars} onChange={(evt) => {
-                    setAddScrollbars(!addScrollbars);
-                }}/>
+        <Checkbox styles={props.checkBoxStyles} label="Add scrollbars"  checked={props.addScrollbars} onChange={props.toggleAddScrollbars}/>
         <Checkbox styles={props.checkBoxStyles} label="Coverage running"  checked={props.coverageRunning} onChange={props.coverageRunningToggled}/>
-        {addScrollbars && <><Wide/><Long/></>}
-        
     </div>
 }

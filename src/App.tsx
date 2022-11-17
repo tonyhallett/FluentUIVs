@@ -1,10 +1,10 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IsFocusVisibleClassName, IStyleFunction, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
-import { useState } from "react";
+import { ActionButton, ContextualMenu, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDragOptions, IsFocusVisibleClassName, IStyleFunction, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
+import { useEffect, useState } from "react";
 import {vsThemes} from "./themeColors";
-import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, OpenPaneIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
+import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames } from "./globalClassNames";
 import { GroupedListDemo } from "./GroupedListDemo";
@@ -16,6 +16,9 @@ import { ControlsDemo } from "./ControlDemo";
 import { MakeChange } from "./MakeChange";
 import { getActionButtonStyles } from "./themeStyles";
 import { SimpleTableDemo } from "./SimpleTableDemo";
+import { MakeChangePivotItem } from "./MakeChangePivotItem";
+import { useBoolean } from "@fluentui/react-hooks";
+import { Long, Wide } from "./LongAndWide";
 
 //https://github.com/microsoft/fluentui/issues/22895
 export const VisualStudioIDELogo32Icon =  createSvgIcon({
@@ -46,14 +49,28 @@ registerIcons({
       OpenFile: <VisualStudioIDELogo32Icon/>,
       beerMug:<BeerMugIcon/>,
       review:<ReviewSolidIcon/>,
+      open:<OpenPaneIcon/>,
+      next:<NextIcon/>,
+      previous:<PreviousIcon/>
+
     },
   });
+
+
+  const dragOptions: IDragOptions = {
+    moveMenuItemText: 'Move',
+    closeMenuItemText: 'Close',
+  
+    menu: ContextualMenu,
+    dragHandleSelector: '.ms-Modal-scrollableContent > div:first-child',
+};
 
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
     const [selectedThemeIndex,setSelectedThemeIndex] = useState(0);
     const [coverageRunning,setCoverageRunning] = useState(false);
     const [useHyperlink,setUseHyperlink] = useState(false);
+    const [addScrollbars, toggleAddScrollbars] = useState(false);
     
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeName = selectedTheme[0];
@@ -87,10 +104,15 @@ export function App() {
     ]
     useBodyToolWindow(bodyStyles);
 
-    function nextTheme(){ //todo memo 
+    function nextTheme(){ //todo useCallback
         var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
         setSelectedThemeIndex(next);
     }
+
+    function previousTheme(){ //todo useCallback
+      var next = selectedThemeIndex === 0 ? vsThemes.length - 1 : selectedThemeIndex-1;
+      setSelectedThemeIndex(next);
+  }
     
     const progressBarColors = selectedThemeColors.ProgressBarColors;
     
@@ -190,19 +212,23 @@ export function App() {
   }
 
     const alwaysRender = false;
-    const items:JSX.Element[] = [
-      <PivotItem key={0} itemKey='first' headerText='First' alwaysRender={alwaysRender}>
+    {/* <PivotItem key={0} itemKey='first' headerText='First' alwaysRender={alwaysRender}>
         <div>
           <ColorDisplay color={environmentColors.VizSurfaceGreenLight}/>
           <ColorDisplay color={environmentColors.VizSurfaceGreenMedium}/>
           <ColorDisplay color={environmentColors.VizSurfaceGreenDark}/>
         </div>
+      </PivotItem>, */}
+    const items:JSX.Element[] = [
+      
+      <PivotItem key={0} itemKey='scrollbars' headerText='Scrollbars' alwaysRender={alwaysRender}>
+        {addScrollbars && <><Long/><Wide/></>}
       </PivotItem>,
       <PivotItem key={1} itemKey='log' headerText='Log' alwaysRender={alwaysRender}>
         <LogDemo vsColors={selectedThemeColors} useLinks={useHyperlink} toolWindowBackground={toolWindowBackground} toolWindowText={toolWindowText} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}/>
       </PivotItem>,
       <PivotItem key={2} itemKey='simpleTable' headerText='Simple Table' alwaysRender={alwaysRender}>
-        <SimpleTableDemo environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
+        <SimpleTableDemo treeViewColorsBackground={treeViewColors.Background} environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
       </PivotItem>,
       <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
         <GroupedListDemo useLink={useHyperlink} vsColors={selectedThemeColors}/>
@@ -214,31 +240,77 @@ export function App() {
     <PivotItem key={5} itemKey="controls" headerText='Controls' alwaysRender={alwaysRender}>
       <ControlsDemo vsColors={selectedThemeColors} checkBoxStyles={vsCbStylesFn} actionButtonStyles={getActionButtonStyles(selectedThemeColors)}></ControlsDemo>
     </PivotItem>,
-    <PivotItem key={6} itemKey="makeChange" headerText="Make change" alwaysRender={alwaysRender}>
-      <MakeChange 
-        useHyperlink={useHyperlink} 
-        useHyperlinkToggled={() =>setUseHyperlink(!useHyperlink) }
-        coverageRunning={coverageRunning} coverageRunningToggled={(_) => {
-            setCoverageRunning(!coverageRunning);
-       }} 
-       labelStyles={
-        {
-          root:{
-            color:environmentColors.ToolWindowText
-      }}
-      } nextTheme={nextTheme} selectedThemeName={selectedThemeName} actionButtonStyles={getActionButtonStyles(selectedThemeColors)} checkBoxStyles={vsCbStylesFn} />
-    </PivotItem>
+    
     ]
 
     const percentComplete = coverageRunning ? undefined : 0;
 
     return <div>
-        <ProgressIndicator barHeight={5} percentComplete={percentComplete} styles={ props => {
+        <Modal
+              /*
+                this version also suffers with
+                https://github.com/microsoft/fluentui/issues/18924
+                Unable to focus outside modeless modal
 
+              */
+			        forceFocusInsideTrap={false} //						https://github.com/microsoft/fluentui/issues/24151
+              isOpen={true}
+              isModeless={true}
+              dragOptions={dragOptions}
+              /*
+                includes style fixes for
+                [Bug]-Regression: Absolute-positioned modeless dialogs/modals are no longer visible or repositioned since 8.64.0.
+                https://github.com/microsoft/fluentui/issues/22878
+              */
+              styles = {modalStyleProps => {
+                const {isVisible, isModeless} = modalStyleProps
+                return {
+                    root:[{
+                      position: "fixed",
+                    },
+                    isVisible && {
+                      pointerEvents:"inherit"
+                    },
+                    isVisible && !isModeless && {
+                      pointerEvents: 'auto',
+                    },
+                    
+                  ],
+                  main:[{
+                    backgroundColor:selectedThemeColors.EnvironmentColors.ToolWindowBackground,
+                    borderColor:selectedThemeColors.EnvironmentColors.ToolWindowBorder
+                    },
+                    isModeless && {
+                      pointerEvents: 'auto',
+                    }
+                  ],
+                  layer: isModeless &&  { pointerEvents: 'none', position:"fixed" }
+                }
+              }}
+              >
+                  <MakeChange toggleAddScrollbars={evt => {toggleAddScrollbars(!addScrollbars)}} addScrollbars={addScrollbars} toolWindowBorder={selectedThemeColors.EnvironmentColors.ToolWindowBorder}
+                    toolWindowBackground={selectedThemeColors.EnvironmentColors.ToolWindowBackground}
+                    useHyperlink={useHyperlink} 
+                    useHyperlinkToggled={() =>setUseHyperlink(!useHyperlink) }
+                    coverageRunning={coverageRunning} coverageRunningToggled={(_) => {
+                      setCoverageRunning(!coverageRunning);
+                    }} 
+                    labelStyles={
+                      {
+                        root:{
+                          color:environmentColors.ToolWindowText
+                      }
+                    }
+                  } nextTheme={nextTheme} previousTheme={previousTheme} selectedThemeName={selectedThemeName} actionButtonStyles={getActionButtonStyles(selectedThemeColors)} checkBoxStyles={vsCbStylesFn}/>
+          </Modal>
+        <ProgressIndicator barHeight={10} percentComplete={percentComplete} styles={ props => {
+            const trackColor = progressBarColors.Background;//environmentColors.ToolWindowText
+            const progressBarColor = progressBarColors.IndicatorFill !== trackColor ? progressBarColors.IndicatorFill : environmentColors.ToolWindowText;
             return {
                 progressTrack:{
                     //can barely see this with blue, cannot see with light or dark
-                    backgroundColor : progressBarColors.Background, //could use environmentColors.ToolWindowText
+                    backgroundColor : trackColor,
+                    //border:`1px solid ${environmentColors.ToolWindowText}`
                 },
                 // might use an accent color
                 progressBar:[
@@ -246,8 +318,9 @@ export function App() {
                 },
                 props.indeterminate && {
                     background:
-                    `linear-gradient(to right, ${progressBarColors.IndicatorFill} 0%, ` +
-                    `${progressBarColors.IndicatorFill} 50%, ${progressBarColors.IndicatorFill} 100%)`,
+                    `linear-gradient(to right, ${progressBarColor} 0%, ` +
+                    `${progressBarColor} 50%, ${progressBarColor} 100%)`,
+                    //border:`1px solid ${environmentColors.ToolWindowText}`
                 }
                 ]
             }
