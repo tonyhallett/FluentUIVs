@@ -1,24 +1,22 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { ActionButton, ContextualMenu, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDragOptions, IsFocusVisibleClassName, IStyleFunction, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
-import { useEffect, useState } from "react";
+import { ActionButton, Checkbox, ContextualMenu, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDragOptions, ILabelProps, IsFocusVisibleClassName, IStyleFunction, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
+import { useState } from "react";
 import {vsThemes} from "./themeColors";
-import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
+import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames } from "./globalClassNames";
 import { GroupedListDemo } from "./GroupedListDemo";
 import { useBodyToolWindow } from "./useBody";
 import { FeedbackDemo } from "./FeedbackDemo";
 import { getScrollbarStyle } from "./getScrollbarStyle";
-import { ColorDisplay } from "./ColorDisplay";
 import { ControlsDemo } from "./ControlDemo";
-import { MakeChange } from "./MakeChange";
 import { getActionButtonStyles } from "./themeStyles";
 import { SimpleTableDemo } from "./SimpleTableDemo";
-import { MakeChangePivotItem } from "./MakeChangePivotItem";
 import { useBoolean } from "@fluentui/react-hooks";
 import { Long, Wide } from "./LongAndWide";
+import React from "react";
 
 //https://github.com/microsoft/fluentui/issues/22895
 export const VisualStudioIDELogo32Icon =  createSvgIcon({
@@ -51,7 +49,8 @@ registerIcons({
       review:<ReviewSolidIcon/>,
       open:<OpenPaneIcon/>,
       next:<NextIcon/>,
-      previous:<PreviousIcon/>
+      previous:<PreviousIcon/>,
+      more:<MoreIcon/>
 
     },
   });
@@ -71,6 +70,19 @@ export function App() {
     const [coverageRunning,setCoverageRunning] = useState(false);
     const [useHyperlink,setUseHyperlink] = useState(false);
     const [addScrollbars, toggleAddScrollbars] = useState(false);
+    const [rowBackgroundFromTreeViewColors,setRowBackgroundFromTreeViewColors] = useState(true);
+    const [rowTextFromTreeViewColors,setRowTextFromTreeViewColors] = useState(false);
+    const [headerColorsForHeaderText,setHeaderColorsForHeaderText] = useState(false);
+
+    const nextTheme= React.useCallback(() => {
+      var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
+      setSelectedThemeIndex(next);
+    }, [selectedThemeIndex])
+
+    const previousTheme = React.useCallback(() => {
+      var next = selectedThemeIndex === 0 ? vsThemes.length - 1 : selectedThemeIndex-1;
+      setSelectedThemeIndex(next);
+    },[selectedThemeIndex])
     
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeName = selectedTheme[0];
@@ -104,15 +116,7 @@ export function App() {
     ]
     useBodyToolWindow(bodyStyles);
 
-    function nextTheme(){ //todo useCallback
-        var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
-        setSelectedThemeIndex(next);
-    }
-
-    function previousTheme(){ //todo useCallback
-      var next = selectedThemeIndex === 0 ? vsThemes.length - 1 : selectedThemeIndex-1;
-      setSelectedThemeIndex(next);
-  }
+    
     
     const progressBarColors = selectedThemeColors.ProgressBarColors;
     
@@ -212,15 +216,8 @@ export function App() {
   }
 
     const alwaysRender = false;
-    {/* <PivotItem key={0} itemKey='first' headerText='First' alwaysRender={alwaysRender}>
-        <div>
-          <ColorDisplay color={environmentColors.VizSurfaceGreenLight}/>
-          <ColorDisplay color={environmentColors.VizSurfaceGreenMedium}/>
-          <ColorDisplay color={environmentColors.VizSurfaceGreenDark}/>
-        </div>
-      </PivotItem>, */}
+    
     const items:JSX.Element[] = [
-      
       <PivotItem key={0} itemKey='scrollbars' headerText='Scrollbars' alwaysRender={alwaysRender}>
         {addScrollbars && <><Long/><Wide/></>}
       </PivotItem>,
@@ -231,7 +228,7 @@ export function App() {
         <SimpleTableDemo treeViewColorsBackground={treeViewColors.Background} environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
       </PivotItem>,
       <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
-        <GroupedListDemo useLink={useHyperlink} vsColors={selectedThemeColors}/>
+        <GroupedListDemo headerColorsForHeaderText={headerColorsForHeaderText} useLink={useHyperlink} vsColors={selectedThemeColors} rowBackgroundFromTreeViewColors={rowBackgroundFromTreeViewColors} rowTextFromTreeViewColors={rowTextFromTreeViewColors}/>
     </PivotItem>,
     <PivotItem key={4} itemKey="feedback" headerText='Feedback' alwaysRender={alwaysRender}>
       <FeedbackDemo vsColors={selectedThemeColors} 
@@ -244,7 +241,13 @@ export function App() {
     ]
 
     const percentComplete = coverageRunning ? undefined : 0;
-
+    const actionButtonStyles = getActionButtonStyles(selectedThemeColors);
+    const labelStyles:ILabelProps['styles'] = {
+        root:{
+          color:environmentColors.ToolWindowText
+      }
+    }
+    
     return <div>
         <Modal
               /*
@@ -288,20 +291,21 @@ export function App() {
                 }
               }}
               >
-                  <MakeChange toggleAddScrollbars={evt => {toggleAddScrollbars(!addScrollbars)}} addScrollbars={addScrollbars} toolWindowBorder={selectedThemeColors.EnvironmentColors.ToolWindowBorder}
-                    toolWindowBackground={selectedThemeColors.EnvironmentColors.ToolWindowBackground}
-                    useHyperlink={useHyperlink} 
-                    useHyperlinkToggled={() =>setUseHyperlink(!useHyperlink) }
-                    coverageRunning={coverageRunning} coverageRunningToggled={(_) => {
-                      setCoverageRunning(!coverageRunning);
-                    }} 
-                    labelStyles={
-                      {
-                        root:{
-                          color:environmentColors.ToolWindowText
-                      }
-                    }
-                  } nextTheme={nextTheme} previousTheme={previousTheme} selectedThemeName={selectedThemeName} actionButtonStyles={getActionButtonStyles(selectedThemeColors)} checkBoxStyles={vsCbStylesFn}/>
+                  
+                  <div style={{padding:'5px'}}>
+                  <Checkbox styles={vsCbStylesFn} label="Use hyperlink"  checked={useHyperlink} onChange={() =>setUseHyperlink(!useHyperlink)}/>
+                  <Label styles={labelStyles}>{selectedThemeName}</Label>
+                  
+                  <ActionButton iconProps={{iconName:"previous"}} styles={actionButtonStyles} onClick={previousTheme}>Previous theme</ActionButton>
+                  <ActionButton iconProps={{iconName:"next"}} styles={actionButtonStyles} onClick={nextTheme}>Next theme</ActionButton>
+                  <Checkbox styles={vsCbStylesFn} label="Add scrollbars"  checked={addScrollbars} onChange={() =>toggleAddScrollbars(!addScrollbars)}/>
+                  <Checkbox styles={vsCbStylesFn} label="Coverage running"  checked={coverageRunning} onChange={() => setCoverageRunning(!coverageRunning)}/>
+
+                  <Checkbox styles={vsCbStylesFn} label="row background from tvc "  checked={rowBackgroundFromTreeViewColors} onChange={() => setRowBackgroundFromTreeViewColors(!rowBackgroundFromTreeViewColors)}/>
+                  <Checkbox styles={vsCbStylesFn} label="row text from tvc "  checked={rowTextFromTreeViewColors} onChange={() =>setRowTextFromTreeViewColors(!rowTextFromTreeViewColors)}/>
+                  <Checkbox styles={vsCbStylesFn} label="header colors for header text ! "  checked={headerColorsForHeaderText} onChange={() =>setHeaderColorsForHeaderText(!headerColorsForHeaderText)}/>
+                  </div>
+    
           </Modal>
         <ProgressIndicator barHeight={10} percentComplete={percentComplete} styles={ props => {
             const trackColor = progressBarColors.Background;//environmentColors.ToolWindowText

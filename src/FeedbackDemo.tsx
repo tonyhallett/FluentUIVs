@@ -1,5 +1,6 @@
-import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { ActionButton, CommandBar, ICommandBarItemProps } from "@fluentui/react";
 import { VsColors } from "./themeColors";
+import { getActionButtonStyles } from "./themeStyles";
 
 
 
@@ -23,14 +24,15 @@ const buttonStyles:ICommandBarItemProps["buttonStyles"]={
     }
 
 }
-const items:ICommandBarItemProps[] = [
+let items:ICommandBarItemProps[] = [
     {
       key:'buyBeer',
       text:'Buy beer',
       iconProps:{iconName:'beerMug'},
       ariaLabel:'Buy me a beer',
       onClick(){
-        (window as any).chrome.webview.hostObjects.fccResourcesNavigator.buyMeACoffee();
+        alert("Beer")
+        //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.buyMeACoffee();
       },
       buttonStyles
     },
@@ -40,7 +42,8 @@ const items:ICommandBarItemProps[] = [
       iconProps:{iconName:'github'},
       ariaLabel:'Log issue or suggestion',
       onClick(){
-        (window as any).chrome.webview.hostObjects.fccResourcesNavigator.logIssueOrSuggestion();
+        alert("issue")
+        //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.logIssueOrSuggestion();
       },
       buttonStyles
     },
@@ -51,13 +54,27 @@ const items:ICommandBarItemProps[] = [
       ariaLabel:'Review',
       buttonStyles,
       onClick(){
-        (window as any).chrome.webview.hostObjects.fccResourcesNavigator.rateAndReview();
+        alert("review")
+        //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.rateAndReview();
       }
     }
     
   ]
+
+  const numItems = 10;
+  for(let i = items.length;i<numItems;i++){
+    items.push({...items[0],key:(items.length + i).toString()})
+  }
+  
+const styles = getActionButtonStyles(vsColors);
+
+const ButtonAs:any = (props:ICommandBarItemProps) => {
+  return <ActionButton style={{marginRight:'5px'}} styles={styles} onClick={props.onClick as any} iconProps={props.iconProps}>{props.text} </ActionButton>
+} 
+
+
   // I should lokkd at sub compoennet styles again.
-  return <CommandBar overflowButtonProps={
+  return <CommandBar buttonAs={ButtonAs} overflowButtonProps={
     {
         // to do when I have some overflow items
         // the styles are for a CommandBarButton
@@ -74,8 +91,9 @@ const items:ICommandBarItemProps[] = [
     }
   } styles={{
     root:{
-        backgroundColor:environmentColors.CommandBarGradientBegin,
-        border:`1px solid ${environmentColors.CommandBarToolBarBorder}`
+        backgroundColor:'none',
+        border:`none`,
+        padding:'0px'
         // add border
     }
     

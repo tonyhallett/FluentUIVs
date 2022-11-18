@@ -1,7 +1,10 @@
-import { Selection, DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, ProgressIndicator, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode, IContextualMenuItem, ContextualMenu } from "@fluentui/react";
-import React, { useRef, useState } from "react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
+import React, { useEffect, useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
+import { CopyToClipboard } from "./CopyToClipboard";
 import { sliderClassNames } from "./globalClassNames";
+import { GroupsItemsSelection } from "./GroupsItemsSelection";
+import { renderPercentage } from "./renderPercentage";
 import { VsColors } from "./themeColors";
 import { buttonHighContrastFocus, getActionButtonStyles } from "./themeStyles";
 
@@ -156,7 +159,10 @@ const columns:IDemoColumn[] = [
           },getVsFocusStyle(vsColors)
         ]}}>{item.name}</Text>
       }
-      return useLink ? <Link styles={props => {
+      const clickHandler:IButtonProps['onClick'] = evt => {
+        
+      }
+      return useLink ? <Link onClick={clickHandler} styles={props => {
         const {isDisabled} = props;
         return {
           root:[{
@@ -178,7 +184,7 @@ const columns:IDemoColumn[] = [
         }}
       }>{item.name}</Link> : 
        <span>
-        <ActionButton iconProps={{iconName:"openFile"}} styles={getActionButtonStyles(vsColors)}></ActionButton>
+        <ActionButton iconProps={{iconName:"openFile"}} onClick={clickHandler} styles={getActionButtonStyles(vsColors)}></ActionButton>
         <span style={{marginLeft:"5px"}}>{item.name}</span>
         </span>
     }
@@ -221,93 +227,10 @@ let _columns:any = null;
 const groupNestingDepth = 2
 export interface IGroupedListDemoProps{
   vsColors:VsColors,
-  useLink:boolean
-}
-
-function renderPercentage(percentage:number | null,vsColors:VsColors){
-  const {EnvironmentColors, HeaderColors} = vsColors;
-  const backgroundColor = percentage === null ? "transparent" : EnvironmentColors.VizSurfaceGreenMedium;//HeaderColors.SeparatorLine
-  return <ProgressIndicator barHeight={5} percentComplete={percentage === null ? 1 : percentage/100} styles={
-    {
-      progressBar:{
-        backgroundColor,
-        color:"transparent"
-      },
-      progressTrack:{
-        backgroundColor:"transparent",
-        color:"transparent"
-      },
-      root:{
-        width:'100px',
-        color:"transparent"
-      },
-    }
-  }/>
-}
-
-
-let lastVsColors:VsColors|undefined;
-let lastUseLink:boolean | undefined
-
-function CopyToClipboard(props:{children:any}){
-  return <span onKeyUp={evt => {
-    if(evt.ctrlKey && evt.key === "c"){
-      const text = (evt.target as Element).textContent;
-
-      navigator.clipboard.writeText(text!);
-    }
-  }} >{props.children}</span>
-}
-
-class GroupsItemsSelection extends Selection {
-  private itemsLength:number | undefined;
-  private groups:IGroup[] = [];
-  private static instanceCount:number = 0;
-  private instanceId:number;
-  constructor(){
-    super({selectionMode:SelectionMode.single});
-    this.instanceId = GroupsItemsSelection.instanceCount++;
-  }
-  public initialize(groups:IGroup[], items:any[]){
-    groups.forEach(group => this.addGroup(group));
-    this.setItemsPrivate(items);
-  }
-  /* constructor(groups:IGroup[], items:any[]){
-    super({selectionMode:SelectionMode.single});
-    groups.forEach(group => this.addGroup(group));
-    this.setItemsPrivate(items);
-    this.instanceId = GroupsItemsSelection.instanceCount++;
-  }
- */
-  private addGroup(group:IGroup){
-    this.groups.push(group);
-    if(group.children){
-      group.children.forEach(g => this.addGroup(g))
-    }
-  }
-  
-  public setItems(items: any[], shouldClear: boolean = true): void {
-  }
-  
-  private setItemsPrivate(items: any[]){
-    this.itemsLength = items.length;
-    super.setItems(items.concat(this.groups), false);
-  }
-  
-  public getGroupIndex(group:IGroup):number{
-    const items = this.getItems();
-    const groups = items.slice(this.itemsLength);
-    let groupIndex = groups.findIndex(g => g.key === group.key);
-    return groupIndex + this.itemsLength!;
-  }
-
-  setKeySelected(key: string, isSelected: boolean, shouldAnchor: boolean): void {
-    super.setKeySelected(key, isSelected, shouldAnchor);
-  }
-
-  setIndexSelected(index: number, isSelected: boolean, shouldAnchor: boolean): void {
-    super.setIndexSelected(index, isSelected, shouldAnchor);
-  }
+  useLink:boolean,
+  rowBackgroundFromTreeViewColors:boolean,
+  rowTextFromTreeViewColors:boolean,
+  headerColorsForHeaderText:boolean
 }
 
 const groupHeaderRowClassName = "groupHeaderRow";
@@ -317,22 +240,50 @@ interface IContextMenuDetails{
   target:MouseEvent
 }
 
+let lastVsColors:VsColors|undefined;
+let lastUseLink:boolean | undefined;
+let lastRowBackgroundFromTreeViewColors:boolean | undefined;
+let lastRowTextFromTreeViewColors:boolean | undefined;
+let lastHeaderColorsForHeaderText:boolean | undefined
+let needsNewVersion = false;
+
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
     const [contextMenuDetails, setContextMenuDetails] = useState<IContextMenuDetails>();
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
     const selectionRef = useRef<GroupsItemsSelection>(new GroupsItemsSelection());
+    useEffect(() => {
+      if(needsNewVersion){
+        detailsListRef.current?.forceUpdate();
+      }
+    })
 
+    const {vsColors, headerColorsForHeaderText, rowBackgroundFromTreeViewColors, rowTextFromTreeViewColors, useLink} = props;
+
+    needsNewVersion = lastVsColors !== vsColors || useLink !== lastUseLink || 
+      lastRowBackgroundFromTreeViewColors !== rowBackgroundFromTreeViewColors ||
+      lastRowTextFromTreeViewColors !== rowTextFromTreeViewColors ||
+      lastHeaderColorsForHeaderText !== headerColorsForHeaderText;
+
+    lastVsColors = vsColors;
+    lastUseLink = props.useLink;
+    lastRowBackgroundFromTreeViewColors = props.rowBackgroundFromTreeViewColors;
+    lastRowTextFromTreeViewColors = props.rowTextFromTreeViewColors;
+    lastHeaderColorsForHeaderText = props.headerColorsForHeaderText;
+    
     const selection = selectionRef.current;
     selection.initialize(groups,items);
 
-    const {vsColors} = props;
     const headerColors = vsColors.HeaderColors;
     const environmentColors = vsColors.EnvironmentColors;
     const treeViewColors = vsColors.TreeViewColors;
     const searchControlColors = vsColors.SearchControlColors;
     const commonControlsColors = vsColors.CommonControlsColors;
+
+    const rowBackground = rowBackgroundFromTreeViewColors ? treeViewColors.Background : "transparent"
+    const rowTextColor = rowTextFromTreeViewColors ? treeViewColors.BackgroundText : environmentColors.CommandBarTextActive;
+
     const focusColor = vsColors.CommonControlsColors.FocusVisualText;
 
     const focusStyle = getVsFocusStyle(vsColors);
@@ -398,20 +349,29 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       return {
         root:[
           {
-            color:environmentColors.CommandBarTextActive, // mirroring vs - alt headerColors.DefaultText,
+            color: headerColorsForHeaderText ? headerColors.DefaultText : environmentColors.CommandBarTextActive, // mirroring vs - alt headerColors.DefaultText,
             background:headerColors.Default,
             borderLeft:`1px solid ${headerColors.SeparatorLine}`
           },
         isActionable && {
           selectors: {
             ':hover': {
-              color: environmentColors.CommandBarTextHover,// mirroring vs, alt headerColors.MouseOverText,
+              color: headerColorsForHeaderText ? headerColors.MouseOverText : environmentColors.CommandBarTextHover,// mirroring vs, alt headerColors.MouseOverText,
               background: headerColors.MouseOver,
-              // glyph to do
+              selectors:{
+                ".ms-Icon":{
+                  color:headerColors.MouseOverGlyph
+                }
+              }
             },
             ':active': {
-              color:environmentColors.CommandBarTextSelected, //mirroring vs, alt headerColors.MouseDownText,
+              color: headerColorsForHeaderText ? headerColors.MouseDownText : environmentColors.CommandBarTextSelected, //mirroring vs, alt headerColors.MouseDownText,
               background: headerColors.MouseDown,
+              selectors:{
+                ".ms-Icon":{
+                  color:headerColors.MouseDownGlyph
+                }
+              }
             },
           },
         },
@@ -420,7 +380,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         focusStyle,
       ],  
       nearIcon:{
-        color:headerColors.Glyph
+        color:headerColors.Glyph,
       },
       sortIcon:{
         color:headerColors.Glyph
@@ -432,10 +392,8 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     }
     columns.forEach(c => c.styles=columnStyles);
 
-    const needsNewVersion = lastVsColors !== vsColors || props.useLink !== lastUseLink;
-    if(needsNewVersion){
-      detailsListRef.current?.forceUpdate();
-    }
+    
+
     const onRenderItemColumn:IDetailsRowProps["onRenderItemColumn"] = (item,index, column) => {
       const demoColumn = column as IDemoColumn;
       if(demoColumn!.onRenderWithStyles){
@@ -444,8 +402,8 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         return item[demoColumn.fieldName];
       }
     }
-    lastVsColors = vsColors;
-    lastUseLink = props.useLink;
+
+    
 
     const onHideContextualMenu = React.useCallback(() => setContextMenuDetails(undefined), []);
     const contextMenu = contextMenuDetails ? <ContextualMenu 
@@ -456,6 +414,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       >
         
     </ContextualMenu> : undefined;
+
     return <div>
       {contextMenu}
       <Stack horizontal horizontalAlign='space-between' verticalAlign='center'>
@@ -541,6 +500,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         }} iconProps={{iconName:'filter'}} value={filter} onChange={(_,newFilter) => setFilter(newFilter!)}/>
       </Stack>
       <DetailsList 
+        styles={
+          {
+            root:{
+              marginTop:'10px'
+            }
+          }
+        }
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
         layoutMode={DetailsListLayoutMode.justified}
@@ -599,7 +565,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 itemIndex={index}
                 onRenderItemColumn={onRenderItemColumn}
                 styles={(styleProps) => {
-                  const {isSelected} = styleProps
+                  const {isSelected, } = styleProps
                   return {
                     root: [{
                       background:"inherit",
@@ -660,6 +626,10 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                             },
                           },
                         },
+                        '&:focus-within':{
+                          color: treeViewColors.SelectedItemActiveText,
+                          background: treeViewColors.SelectedItemActive,
+                        }
                         
                       }},
                     focusStyle
@@ -691,12 +661,12 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               root:[{
                 borderBottom: `1px solid ${headerColors.SeparatorLine}`,
                 userSelect:'text',
-                background:headerColors.Default,
-                color: environmentColors.CommandBarTextActive, // *** mirroring vs, alt headerColors.DefaultText
+                background: rowBackground,// treeViewColors.Background,
+                color: rowTextColor,//environmentColors.CommandBarTextActive, // *** mirroring vs
                 selectors: {
                   ':hover': {
-                    background: headerColors.MouseOver,
-                    color: environmentColors.CommandBarTextHover // *** mirroring vs, alt headerColors.MouseOverText,
+                    background: rowBackground,// treeViewColors.Background,
+                    color: rowTextColor,// environmentColors.CommandBarTextActive // *** mirroring vs
                   },
                 },
                 
@@ -757,13 +727,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               },
               root: [
                 {
-                  background:treeViewColors.Background, // mirroring vs, docs say "transparent",
+                  background: rowBackground,//  treeViewColors.Background, // mirroring vs, docs say "transparent",
                   borderBottom:"none",
-                  color:environmentColors.CommandBarTextActive,
+                  color: rowTextColor,// environmentColors.CommandBarTextActive,
                   selectors: {
                     "&:hover":{
-                      background:treeViewColors.Background, // mirroring vs, docs say "transparent",
-                      color:environmentColors.CommandBarTextActive,
+                      background:rowBackground,//treeViewColors.Background, // mirroring vs, docs say "transparent",
+                      color:rowTextColor,// environmentColors.CommandBarTextActive,
                       selectors: {
                         [`.ms-DetailsRow-cell > .ms-Link`]: {
                           color: environmentColors.PanelHyperlink,
@@ -810,6 +780,9 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                           color: treeViewColors.SelectedItemActiveText,
                           background: treeViewColors.SelectedItemActive,
                         },
+                        ['.ms-DetailsRow-cell button.ms-Link']:{
+                          color:treeViewColors.SelectedItemActiveText
+                        },
                       },
                     },
             
@@ -824,6 +797,10 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                         },
                       },
                     },
+                    '&:focus-within':{
+                      color: treeViewColors.SelectedItemActiveText,
+                      background: treeViewColors.SelectedItemActive,
+                    }
                     
                   },
                 },
@@ -853,6 +830,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               root:{
                 background:headerColors.Default,
                 borderBottom: `1px solid ${headerColors.SeparatorLine}`,
+                paddingTop:'0px'//***************************************** 
                 // should this be done ?
                 //borderTop: `1px solid ${headerColors.SeparatorLine}`,
                 //borderLeft: `1px solid ${headerColors.SeparatorLine}`,
