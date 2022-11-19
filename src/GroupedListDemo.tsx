@@ -5,7 +5,7 @@ import { CopyToClipboard } from "./CopyToClipboard";
 import { sliderClassNames } from "./globalClassNames";
 import { GroupsItemsSelection } from "./GroupsItemsSelection";
 import { renderPercentage } from "./renderPercentage";
-import { VsColors } from "./themeColors";
+import { getVsColors, VsColors, VsColorsThemed } from "./themeColors";
 import { buttonHighContrastFocus, getActionButtonStyles } from "./themeStyles";
 
 /*
@@ -345,7 +345,9 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       }
     }
     const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
-      const {isActionable} = props;
+      const {isActionable, theme} = props;
+      //const vsColors = getVsColors(theme);
+      
       return {
         root:[
           {

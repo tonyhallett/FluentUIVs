@@ -1,9 +1,9 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { ActionButton, Checkbox, ContextualMenu, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDragOptions, ILabelProps, IsFocusVisibleClassName, IStyleFunction, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
-import { useState } from "react";
-import {vsThemes} from "./themeColors";
+import { ActionButton, Checkbox, ContextualMenu, CustomizerContext, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, IDragOptions, ILabelProps, ILabelStyleProps, IsFocusVisibleClassName, IStyleFunction, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons, ThemeProvider,  } from "@fluentui/react";
+import { useRef, useState } from "react";
+import {getVsColors, VsColorsThemed, vsThemes} from "./themeColors";
 import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { LogDemo } from "./LogDemo";
 import { cbGlobalClassNames } from "./globalClassNames";
@@ -73,6 +73,7 @@ export function App() {
     const [rowBackgroundFromTreeViewColors,setRowBackgroundFromTreeViewColors] = useState(true);
     const [rowTextFromTreeViewColors,setRowTextFromTreeViewColors] = useState(false);
     const [headerColorsForHeaderText,setHeaderColorsForHeaderText] = useState(false);
+    const vsColorsTheme = useRef({vsColors:vsThemes[0][1]})
 
     const nextTheme= React.useCallback(() => {
       var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
@@ -87,6 +88,9 @@ export function App() {
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeName = selectedTheme[0];
     const selectedThemeColors = selectedTheme[1];
+    if(vsColorsTheme.current.vsColors !== selectedThemeColors){
+      vsColorsTheme.current = {vsColors:selectedThemeColors};
+    }
 
     const environmentColors = selectedThemeColors.EnvironmentColors;
     environmentColors.ScrollBarArrowBackground
@@ -248,7 +252,33 @@ export function App() {
       }
     }
     
-    return <div>
+    {/* */}
+    return  <ThemeProvider applyTo="none" theme={vsColorsTheme.current as any}> 
+    <CustomizerContext.Provider value={{
+      customizations:{
+        scopedSettings:{
+          "Label":{
+            styles:(props:ILabelStyleProps) => {
+              // why is vsColors not getting through ? 
+              // although do not need theme when they are in js scope
+              //will just need to change the value attribute to re-render ( and can get rid of the ThemeProvider)  
+              
+
+                return {
+                  root:{
+                    color:selectedThemeColors.EnvironmentColors.ToolWindowText
+                  }
+                }
+             
+            }
+          }
+        },
+        settings:{
+
+        }
+      }
+    }}>
+    <>
         <Modal
               /*
                 this version also suffers with
@@ -266,7 +296,7 @@ export function App() {
                 https://github.com/microsoft/fluentui/issues/22878
               */
               styles = {modalStyleProps => {
-                const {isVisible, isModeless} = modalStyleProps
+                const {isVisible, isModeless, theme} = modalStyleProps
                 return {
                     root:[{
                       position: "fixed",
@@ -294,7 +324,7 @@ export function App() {
                   
                   <div style={{padding:'5px'}}>
                   <Checkbox styles={vsCbStylesFn} label="Use hyperlink"  checked={useHyperlink} onChange={() =>setUseHyperlink(!useHyperlink)}/>
-                  <Label styles={labelStyles}>{selectedThemeName}</Label>
+                  <Label>{selectedThemeName}</Label>
                   
                   <ActionButton iconProps={{iconName:"previous"}} styles={actionButtonStyles} onClick={previousTheme}>Previous theme</ActionButton>
                   <ActionButton iconProps={{iconName:"next"}} styles={actionButtonStyles} onClick={nextTheme}>Next theme</ActionButton>
@@ -399,5 +429,7 @@ export function App() {
             selectedKey={selectedTabKey}>
             {items}
         </Pivot>
-    </div>
+      </>
+        </CustomizerContext.Provider>
+   </ThemeProvider>
 }

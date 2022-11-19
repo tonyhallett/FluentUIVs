@@ -1,3 +1,5 @@
+import { Theme } from "@fluentui/react"
+
 const darkTheme = {
   EnvironmentColors: {
     AccentBorder : 'rgb(61,61,61)',
@@ -45411,6 +45413,12 @@ const yonceTheme = {
     ["yonce", yonceTheme]
     
   ]
+
+  export type VsColorsThemed<TOriginal> = TOriginal & { theme: { vsColors: VsColors; }; };
+
+  export const getVsColors = (theme:Theme):VsColors => {
+    return (theme as any).vsColors
+  }
   
 
   
