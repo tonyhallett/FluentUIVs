@@ -1,7 +1,6 @@
-import { ActionButton, CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { MyActionButton } from "./MyActionButton";
 import { VsColors } from "./themeColors";
-import { getActionButtonStyles } from "./themeStyles";
-
 
 
 export function FeedbackDemo(props:{
@@ -11,7 +10,7 @@ export function FeedbackDemo(props:{
   const {vsColors} = props;
   const {EnvironmentColors:environmentColors} = vsColors;
 
-const buttonStyles:ICommandBarItemProps["buttonStyles"]={
+  const buttonStyles:ICommandBarItemProps["buttonStyles"] = {
     root:{
         color:environmentColors.CommandBarTextActive,
         backgroundColor:"transparent",
@@ -22,9 +21,9 @@ const buttonStyles:ICommandBarItemProps["buttonStyles"]={
     icon:{
         color:environmentColors.CommandBarTextActive
     }
+  }
 
-}
-let items:ICommandBarItemProps[] = [
+  let items:ICommandBarItemProps[] = [
     {
       key:'buyBeer',
       text:'Buy beer',
@@ -58,7 +57,6 @@ let items:ICommandBarItemProps[] = [
         //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.rateAndReview();
       }
     }
-    
   ]
 
   const numItems = 10;
@@ -66,11 +64,9 @@ let items:ICommandBarItemProps[] = [
     items.push({...items[0],key:(items.length + i).toString()})
   }
   
-const styles = getActionButtonStyles(vsColors);
-
-const ButtonAs:any = (props:ICommandBarItemProps) => {
-  return <ActionButton style={{marginRight:'5px'}} styles={styles} onClick={props.onClick as any} iconProps={props.iconProps}>{props.text} </ActionButton>
-} 
+  const ButtonAs:any = (props:ICommandBarItemProps) => {
+    return <MyActionButton style={{marginRight:'5px'}} onClick={props.onClick as any} iconProps={props.iconProps}>{props.text} </MyActionButton>
+  } 
 
 
   // I should lokkd at sub compoennet styles again.

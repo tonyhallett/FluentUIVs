@@ -1,5 +1,3 @@
-import React from "react";
-
 export function CopyToClipboard(props: { children: any; }) {
   return <span onKeyUp={evt => {
     if (evt.ctrlKey && evt.key === "c") {

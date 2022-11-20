@@ -1,8 +1,7 @@
-import { IButtonStyles, IRawStyle, Label, Text, ActionButton, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
+import { Text, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
 import { CSSProperties } from "react"
-import { ToolWindowColors } from "./commonTypes"
+import { MyActionButton } from "./MyActionButton"
 import { VsColors } from "./themeColors"
-import { getLinkStyle } from "./themeStyles"
 
 export enum Emphasis{
     None = 0,
@@ -109,19 +108,12 @@ function getActivityIconAriaLabelFromContext(messageContext:MessageContext){
 export type LogProps = {
     logMessages:LogMessage[],
     clearLogMessages:() => void,
-    actionButtonStyles:IButtonStyles,
     useLinks:boolean,
     vsColors:VsColors
-} & ToolWindowColors
-
+}
 export function Log(props:LogProps) {
-    const {logMessages, clearLogMessages, toolWindowBackground, toolWindowText, actionButtonStyles, useLinks, vsColors} = props;
-    var root = actionButtonStyles.root!;
-    if(Array.isArray(root)){
-      root.push({marginLeft:"10px"})
-    }else{
-      (root as IRawStyle).marginLeft = "10px";
-    }
+    const {logMessages, clearLogMessages, useLinks, vsColors} = props;
+
     const activityItemsOrBreaks:any[] = [];
     logMessages.forEach((logMessage,i) => {
       
@@ -129,8 +121,7 @@ export function Log(props:LogProps) {
       logMessage.message.map((msgPart,j) => {
         if(msgPart.type === 'emphasized' ){
           const emphasisStyle:CSSProperties={
-            color:toolWindowText,
-            backgroundColor:toolWindowBackground
+            color:vsColors.EnvironmentColors.ToolWindowText,
           }
           if(msgPart.emphasis & Emphasis.Bold){
             emphasisStyle.fontWeight='bold';
@@ -149,24 +140,20 @@ export function Log(props:LogProps) {
           }}>{msgPart.message}</span> : <Text key={j} styles={{
             root:{
                 ...emphasisStyle as any,
-                color:vsColors.EnvironmentColors.ToolWindowText
+                
             }
           }}>{msgPart.message}</Text>
         }else{
           // issue with fontSize and fontWeight inheriting
-          const btn =  useLinks ? <Link key={j} styles={props => {
-            const linkStyle =  getLinkStyle(props,vsColors);
-            (linkStyle.root as any).push({marginLeft:"5px"});
-            return linkStyle;
-          }}>{msgPart.title}</Link> :
-         <ActionButton 
+          const btn =  useLinks ? <Link key={j} style={{marginLeft:'5px'}}>{msgPart.title}</Link> :
+         <MyActionButton 
           key={j} 
           ariaLabel={msgPart.ariaLabel}
           iconProps={{iconName:getIconNameForHostObjectMethod(msgPart.hostObject,msgPart.methodName)}} 
-          styles={actionButtonStyles}
+          style={{marginLeft:'10px'}}
           onClick={() => {
             
-          }}>{msgPart.title}</ActionButton>
+          }}>{msgPart.title}</MyActionButton>
           return btn;
         }
       })
@@ -178,7 +165,7 @@ export function Log(props:LogProps) {
           styles={{
             root:{
               marginLeft:'10px',
-              color:props.toolWindowText
+              color:vsColors.EnvironmentColors.ToolWindowText
             },
   
           }}
@@ -207,8 +194,7 @@ export function Log(props:LogProps) {
     
   
     return <>
-        <ActionButton ariaLabel='Clear log messages' iconProps={{iconName:'logRemove'}} onClick={clearLogMessages} styles={props.actionButtonStyles}/>
-      
+      <MyActionButton ariaLabel='Clear log messages' iconProps={{iconName:'logRemove'}} onClick={clearLogMessages}/>
       {activityItemsOrBreaks}
     </>
   }

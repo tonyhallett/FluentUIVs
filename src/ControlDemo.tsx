@@ -1,10 +1,11 @@
-import { ActionButton, Checkbox, Dropdown, getFocusStyle, IButtonStyles, ICheckboxProps, IDropdownOption, Link } from "@fluentui/react";
-import React, { useState } from "react";
+import { Checkbox, Dropdown, getFocusStyle, IDropdownOption, Link } from "@fluentui/react";
+import { useState } from "react";
 import { dropDownClassNames } from "./globalClassNames";
+import { MyActionButton } from "./MyActionButton";
 import { VsColors } from "./themeColors";
 import { buttonHighContrastFocus } from "./themeStyles";
 
-export function ControlsDemo(props:{actionButtonStyles:IButtonStyles,checkBoxStyles:ICheckboxProps['styles'],vsColors:VsColors}){ //todo type
+export function ControlsDemo(props:{vsColors:VsColors}){ //todo type
     const [buttonDisabled,setButtonDisabled] = useState(true);
     const [selectedDropDownOption, setSelectedDropDownOptions] = useState<IDropdownOption>();
     const dropDownOptions: IDropdownOption[] = [
@@ -58,48 +59,12 @@ export function ControlsDemo(props:{actionButtonStyles:IButtonStyles,checkBoxSty
         return dropDownItemSelectors;
     }
     return <div>
-        <Link styles={props => {
-          const {isDisabled} = props;
-          return {
-            root:[{
-              color:environmentColors.PanelHyperlink,
-              selectors: {
-                '.ms-Fabric--isFocusVisible &:focus': {
-                  // Can't use getFocusStyle because it doesn't support wrapping links
-                  // https://github.com/microsoft/fluentui/issues/4883#issuecomment-406743543
-                  // Using box-shadow and outline allows the focus rect to wrap links that span multiple lines
-                  // and helps the focus rect avoid getting clipped.
-                  boxShadow: `0 0 0 1px ${focusColor} inset`,
-                  outline: `none`,
-                },
-              },
-      
-            },
-            !isDisabled && {
-              /* '&:active, &:hover, &:active:hover': {
-                color: 'transparent',
-              }, */
-              '&:active:hover':{
-                color:environmentColors.PanelHyperlinkPressed
-              },
-              '&:hover':{
-                color:environmentColors.PanelHyperlinkHover
-              },
-              '&:focus': {
-                color: environmentColors.PanelHyperlink
-              },
-    
-            }
-          ]
-          }}
-        }>Hello</Link>
-        <Checkbox styles={props.checkBoxStyles} label="Toggle btn disabled"  checked={buttonDisabled} onChange={(evt) => {
+        <Link>Hello</Link>
+        <Checkbox label="Toggle btn disabled"  checked={buttonDisabled} onChange={(evt) => {
             setButtonDisabled(!buttonDisabled);
         }}/>
-        <ActionButton disabled={buttonDisabled} iconProps={{iconName:"github"}} styles={
-            props.actionButtonStyles
-        } >Some text</ActionButton>
-        <ActionButton iconProps={{iconName:"logRemove"}} styles={props.actionButtonStyles}/>
+        <MyActionButton disabled={buttonDisabled} iconProps={{iconName:"github"}}>Some text</MyActionButton>
+        <MyActionButton iconProps={{iconName:"logRemove"}}/>
         <Dropdown styles={(dropDownStyleProps => {
         const {isRenderingPlaceholder, disabled, isOpen} = dropDownStyleProps;
         return {

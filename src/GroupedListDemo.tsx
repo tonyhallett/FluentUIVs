@@ -1,12 +1,13 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, Sticky, Theme, Label, GroupSpacer, CheckboxVisibility, IDetailsRowProps, ActionButton, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, ILinkProps, ILinkStyleProps, ITheme, IGetFocusStylesOptions, IRawStyle, ZIndexes, ISelection, SelectionZone, IObjectWithKey, getRTLSafeKeyCode, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, CheckboxVisibility, IDetailsRowProps, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
 import React, { useEffect, useRef, useState } from "react";
 import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { CopyToClipboard } from "./CopyToClipboard";
 import { sliderClassNames } from "./globalClassNames";
 import { GroupsItemsSelection } from "./GroupsItemsSelection";
+import { MyActionButton } from "./MyActionButton";
 import { renderPercentage } from "./renderPercentage";
-import { getVsColors, VsColors, VsColorsThemed } from "./themeColors";
-import { buttonHighContrastFocus, getActionButtonStyles } from "./themeStyles";
+import { VsColors } from "./themeColors";
+import { buttonHighContrastFocus } from "./themeStyles";
 
 /*
     todo
@@ -184,7 +185,7 @@ const columns:IDemoColumn[] = [
         }}
       }>{item.name}</Link> : 
        <span>
-        <ActionButton iconProps={{iconName:"openFile"}} onClick={clickHandler} styles={getActionButtonStyles(vsColors)}></ActionButton>
+        <MyActionButton iconProps={{iconName:"openFile"}} onClick={clickHandler}></MyActionButton>
         <span style={{marginLeft:"5px"}}>{item.name}</span>
         </span>
     }
@@ -198,14 +199,15 @@ const columns:IDemoColumn[] = [
     isSortedDescending: true,
     isResizable:true,
     onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      const focusStyle = getVsFocusStyle(vsColors);
       return <CopyToClipboard><Text styles={
-        {root:{
-          color:'inherit',
-          selectors:{
-            ":focus":focusStyle
-          }
-    }}} data-is-focusable={true}>{item.first}</Text></CopyToClipboard>
+        {
+          root: [{
+            color:'inherit',
+          },
+          getVsFocusStyle(vsColors)
+          ]
+        }
+      } data-is-focusable={true}>{item.first}</Text></CopyToClipboard>
     }
   },
   {
