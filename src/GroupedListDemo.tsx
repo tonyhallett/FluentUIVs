@@ -1,13 +1,12 @@
 import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, CheckboxVisibility, IDetailsRowProps, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
 import React, { useEffect, useRef, useState } from "react";
-import { getColor, lightenOrDarken, colorRGBA } from "./colorHelpers";
 import { CopyToClipboard } from "./CopyToClipboard";
-import { sliderClassNames } from "./globalClassNames";
 import { GroupsItemsSelection } from "./GroupsItemsSelection";
 import { MyActionButton } from "./MyActionButton";
+import { Percentage } from "./Percentage";
 import { renderPercentage } from "./renderPercentage";
 import { VsColors } from "./themeColors";
-import { buttonHighContrastFocus } from "./themeStyles";
+import { buttonHighContrastFocus, getVsFocusStyle } from "./themeStyles";
 
 /*
     todo
@@ -135,9 +134,9 @@ type IDemoColumn = Omit<IColumn, 'onRender'> & {
   fieldName:string
 }
 
-function getVsFocusStyle(vsColors:VsColors) {
+/* function getVsFocusStyle(vsColors:VsColors) {
   return getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText})
-}
+} */
 
 const columns:IDemoColumn[] = [
   {
@@ -220,7 +219,8 @@ const columns:IDemoColumn[] = [
     calculatedWidth:0,// workaround DetailsList] NaN is an invalid value for the 'width' css style property
     flexGrow:1,
     onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      return renderPercentage(item.percentage,vsColors);
+      return <Percentage percentage={item.percentage} styles={{root: {
+        width: '100px'}}}/>
     }
   }
 ];
@@ -242,7 +242,6 @@ interface IContextMenuDetails{
   target:MouseEvent
 }
 
-let lastVsColors:VsColors|undefined;
 let lastUseLink:boolean | undefined;
 let lastRowBackgroundFromTreeViewColors:boolean | undefined;
 let lastRowTextFromTreeViewColors:boolean | undefined;
@@ -263,12 +262,11 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
 
     const {vsColors, headerColorsForHeaderText, rowBackgroundFromTreeViewColors, rowTextFromTreeViewColors, useLink} = props;
 
-    needsNewVersion = lastVsColors !== vsColors || useLink !== lastUseLink || 
+    needsNewVersion = useLink !== lastUseLink || 
       lastRowBackgroundFromTreeViewColors !== rowBackgroundFromTreeViewColors ||
       lastRowTextFromTreeViewColors !== rowTextFromTreeViewColors ||
       lastHeaderColorsForHeaderText !== headerColorsForHeaderText;
 
-    lastVsColors = vsColors;
     lastUseLink = props.useLink;
     lastRowBackgroundFromTreeViewColors = props.rowBackgroundFromTreeViewColors;
     lastRowTextFromTreeViewColors = props.rowTextFromTreeViewColors;
@@ -281,7 +279,6 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     const environmentColors = vsColors.EnvironmentColors;
     const treeViewColors = vsColors.TreeViewColors;
     const searchControlColors = vsColors.SearchControlColors;
-    const commonControlsColors = vsColors.CommonControlsColors;
 
     const rowBackground = rowBackgroundFromTreeViewColors ? treeViewColors.Background : "transparent"
     const rowTextColor = rowTextFromTreeViewColors ? treeViewColors.BackgroundText : environmentColors.CommandBarTextActive;
@@ -290,62 +287,6 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
 
     const focusStyle = getVsFocusStyle(vsColors);
 
-    const toolWindowTextColor = getColor(environmentColors.ToolWindowText);
-    const toolWindowTextDark = isDark(toolWindowTextColor);
-    const hoverToolWindowTextShade = lightenOrDarken(toolWindowTextColor,0.4,toolWindowTextDark); 
-    const hoverToolWindowText=  colorRGBA(hoverToolWindowTextShade);
-    
-    const sliderStyles:ISliderProps['styles']={
-      root:{
-          width:200
-      },
-      slideBox: [
-          focusStyle,
-          {
-            
-            selectors: {
-              [`:active .${sliderClassNames.activeSection}`]: {
-                backgroundColor:hoverToolWindowText
-              },
-              [`:hover .${sliderClassNames.activeSection}`]: {
-                backgroundColor:hoverToolWindowText
-              },
-    
-              [`:active .${sliderClassNames.inactiveSection}`]: {
-                backgroundColor:hoverToolWindowText
-              },
-              [`:hover .${sliderClassNames.inactiveSection}`]: {
-                backgroundColor:hoverToolWindowText
-              },
-    
-              [`:active .${sliderClassNames.thumb}`]: {
-                border: `2px solid ${commonControlsColors.ButtonBorderPressed}`,
-              },
-              [`:hover .${sliderClassNames.thumb}`]: {
-                border: `2px solid ${commonControlsColors.ButtonBorderPressed}`,
-              },
-            },
-          },
-        ],
-      zeroTick:{
-        background:"red"
-      },
-      activeSection:{
-        background:environmentColors.ToolWindowText // this is the lhs of the selected value
-      },
-      inactiveSection:{
-        background:environmentColors.ToolWindowText // this is the rhs
-      },
-      thumb: [
-        {
-          borderColor: commonControlsColors.ButtonBorder,
-          background: commonControlsColors.Button,
-        },
-      ],
-      valueLabel:{
-        color:environmentColors.ToolWindowText
-      }
-    }
     const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
       const {isActionable, theme} = props;
       //const vsColors = getVsColors(theme);
@@ -422,7 +363,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     return <div>
       {contextMenu}
       <Stack horizontal horizontalAlign='space-between' verticalAlign='center'>
-      <Slider styles={sliderStyles} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
+      <Slider showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
               return "The value";
           }}/>
       <SearchBox clearButtonProps={{
@@ -434,73 +375,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
             
           }
        }}   styles={props => {
-          const {theme, underlined, hasFocus} = props;
           return { 
             root: [{ 
               width: 200, 
               marginRight:10, 
-              backgroundColor:searchControlColors.Unfocused,
-              border: `1px solid ${searchControlColors.UnfocusedBorder}`,
-              selectors: {
-			          ':hover': {
-			            borderColor: searchControlColors.MouseOverBorder,
-                  backgroundColor:searchControlColors.MouseOverBackground
-			          },
-			          [`:hover .ms-SearchBox-iconContainer`]: {
-			            color: searchControlColors.MouseOverSearchGlyph,
-			          },
-              },
              },
-              // todo focused states for other
-              hasFocus && [
-                getInputFocusStyle(focusColor,underlined ? 0 : theme.effects.roundedCorner2, underlined ? 'borderBottom' : 'border'),
-                {
-                  border: `1px solid ${searchControlColors.FocusedBorder}`,
-                  backgroundColor:searchControlColors.FocusedBackground
-                }
-              ],
             ],
-            // gets background color from root
-            field: [{
-              color:searchControlColors.UnfocusedText,
-              selectors:{
-                "::selection":{
-                  color:searchControlColors.SelectionText,
-                  background:searchControlColors.Selection
-                },
-                ":hover":{
-                  color:searchControlColors.MouseOverBackgroundText
-                }
-              }
-              
-            }, hasFocus && {color:searchControlColors.FocusedBackgroundText}],
-            iconContainer: [{
-              color:searchControlColors.SearchGlyph
-            }, 
-            // no need for this as search glyph not visible when focus
-            /*hasFocus && {color:searchControlColors.FocusedSearchGlyph}*/
-            ],
-            clearButton:[
-              {
-                selectors: {
-                  '&:hover .ms-Button.ms-Button': {
-                    backgroundColor: "transparent",
-                  },
-                  '&:hover .ms-Button-icon': {
-                    color: searchControlColors.MouseOverClearGlyph,
-                  },
-                  '.ms-Button-icon': {
-                    color: searchControlColors.ClearGlyph,
-                  },
-                },
-              },
-              hasFocus && {
-                '.ms-Button-icon': {
-                  color:searchControlColors.FocusedClearGlyph,
-                },
-              }
-            ],
-            }
+          }
         }} iconProps={{iconName:'filter'}} value={filter} onChange={(_,newFilter) => setFilter(newFilter!)}/>
       </Stack>
       <DetailsList 

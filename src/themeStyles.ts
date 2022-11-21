@@ -1,7 +1,8 @@
-import { getFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IsFocusVisibleClassName } from "@fluentui/react";
+import { getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IProgressIndicatorStyles, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps } from "@fluentui/react";
 import { VsColors } from "./themeColors";
-import { cbGlobalClassNames } from "./globalClassNames";
+import { cbGlobalClassNames, sliderClassNames } from "./globalClassNames";
 import { getScrollbarStyle } from "./getScrollbarStyle";
+import { colorRGBA, getColor, lightenOrDarken } from "./colorHelpers";
 
 export const buttonHighContrastFocus = {
     left: -2,
@@ -10,6 +11,10 @@ export const buttonHighContrastFocus = {
     right: -2,
     outlineColor: 'ButtonText', 
 };
+
+export function getVsFocusStyle(vsColors:VsColors) {
+  return getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText})
+}
 
 export function getActionButtonStyles(vsColors:VsColors){
     const {CommonControlsColors} = vsColors;
@@ -329,6 +334,158 @@ export function getActionButtonStyles(vsColors:VsColors){
                         }
                     }
                 ],
+              }
+            }
+          },
+          "Slider": {
+            styles:(props:ISliderStyleProps) => {
+              const {CommonControlsColors, EnvironmentColors} = vsColors
+              const focusStyle = getVsFocusStyle(vsColors);
+
+              const toolWindowTextColor = getColor(EnvironmentColors.ToolWindowText);
+              const toolWindowTextDark = isDark(toolWindowTextColor);
+              const hoverToolWindowTextShade = lightenOrDarken(toolWindowTextColor,0.4,toolWindowTextDark); 
+              const hoverToolWindowText=  colorRGBA(hoverToolWindowTextShade);
+              return {
+                root:{
+                    width:200
+                },
+                slideBox: [
+                    focusStyle,
+                    {
+                      
+                      selectors: {
+                        [`:active .${sliderClassNames.activeSection}`]: {
+                          backgroundColor:hoverToolWindowText
+                        },
+                        [`:hover .${sliderClassNames.activeSection}`]: {
+                          backgroundColor:hoverToolWindowText
+                        },
+              
+                        [`:active .${sliderClassNames.inactiveSection}`]: {
+                          backgroundColor:hoverToolWindowText
+                        },
+                        [`:hover .${sliderClassNames.inactiveSection}`]: {
+                          backgroundColor:hoverToolWindowText
+                        },
+              
+                        [`:active .${sliderClassNames.thumb}`]: {
+                          border: `2px solid ${CommonControlsColors.ButtonBorderPressed}`,
+                        },
+                        [`:hover .${sliderClassNames.thumb}`]: {
+                          border: `2px solid ${CommonControlsColors.ButtonBorderPressed}`,
+                        },
+                      },
+                    },
+                  ],
+                zeroTick:{
+                  background:"red"
+                },
+                activeSection:{
+                  background:EnvironmentColors.ToolWindowText // this is the lhs of the selected value
+                },
+                inactiveSection:{
+                  background:EnvironmentColors.ToolWindowText // this is the rhs
+                },
+                thumb: [
+                  {
+                    borderColor: CommonControlsColors.ButtonBorder,
+                    background: CommonControlsColors.Button,
+                  },
+                ],
+                valueLabel:{
+                  color:EnvironmentColors.ToolWindowText
+                }
+              }
+            }
+          },
+          "SearchBox" : {
+            styles:(props:ISearchBoxStyleProps) => {
+              const {theme, underlined, hasFocus} = props;
+              const {SearchControlColors, CommonControlsColors} = vsColors;
+            return { 
+              root: [{ 
+                backgroundColor:SearchControlColors.Unfocused,
+                border: `1px solid ${SearchControlColors.UnfocusedBorder}`,
+                selectors: {
+                  ':hover': {
+                    borderColor: SearchControlColors.MouseOverBorder,
+                    backgroundColor:SearchControlColors.MouseOverBackground
+                  },
+                  [`:hover .ms-SearchBox-iconContainer`]: {
+                    color: SearchControlColors.MouseOverSearchGlyph,
+                  },
+                },
+              },
+                // todo focused states for other
+                hasFocus && [
+                  getInputFocusStyle(CommonControlsColors.FocusVisualText,underlined ? 0 : theme.effects.roundedCorner2, underlined ? 'borderBottom' : 'border'),
+                  {
+                    border: `1px solid ${SearchControlColors.FocusedBorder}`,
+                    backgroundColor:SearchControlColors.FocusedBackground
+                  }
+                ],
+              ],
+              // gets background color from root
+              field: [{
+                color:SearchControlColors.UnfocusedText,
+                selectors:{
+                  "::selection":{
+                    color:SearchControlColors.SelectionText,
+                    background:SearchControlColors.Selection
+                  },
+                  ":hover":{
+                    color:SearchControlColors.MouseOverBackgroundText
+                  }
+                }
+                
+              }, hasFocus && {color:SearchControlColors.FocusedBackgroundText}],
+              iconContainer: [{
+                color:SearchControlColors.SearchGlyph
+              }, 
+              // no need for this as search glyph not visible when focus
+              /*hasFocus && {color:searchControlColors.FocusedSearchGlyph}*/
+              ],
+              clearButton:[
+                {
+                  selectors: {
+                    '&:hover .ms-Button.ms-Button': {
+                      backgroundColor: "transparent",
+                    },
+                    '&:hover .ms-Button-icon': {
+                      color: SearchControlColors.MouseOverClearGlyph,
+                    },
+                    '.ms-Button-icon': {
+                      color: SearchControlColors.ClearGlyph,
+                    },
+                  },
+                },
+                hasFocus && {
+                  '.ms-Button-icon': {
+                    color:SearchControlColors.FocusedClearGlyph,
+                  },
+                }
+              ],
+              }
+            }
+          },
+          "Percentage" : {
+            styles:(props:{percentage:number | null}) => {
+              const {percentage} = props;
+              const {EnvironmentColors} = vsColors;
+              const backgroundColor = percentage === null ? "transparent" : EnvironmentColors.VizSurfaceGreenMedium;
+              return {
+                progressBar: {
+                  backgroundColor,
+                  color: "transparent"
+                },
+                progressTrack: {
+                  backgroundColor: "transparent",
+                  color: "transparent"
+                },
+                root: {
+                  color: "transparent"
+                },
               }
             }
           }

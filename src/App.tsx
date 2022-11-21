@@ -103,12 +103,7 @@ export function App() {
 
     
     
-    const progressBarColors = selectedThemeColors.ProgressBarColors;
     const treeViewColors = selectedThemeColors.TreeViewColors;
-    const commonControlsColors = selectedThemeColors.CommonControlsColors;
-    const focusColor = commonControlsColors.FocusVisualText;
-
-
 
     const alwaysRender = true;
     
