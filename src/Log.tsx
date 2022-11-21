@@ -2,6 +2,7 @@ import { Text, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/re
 import { CSSProperties } from "react"
 import { MyActionButton } from "./MyActionButton"
 import { VsColors } from "./themeColors"
+import { ToolWindowText } from "./ToolWindowText"
 
 export enum Emphasis{
     None = 0,
@@ -137,12 +138,12 @@ export function Log(props:LogProps) {
             
             ...emphasisStyle as any,
             display:"inline"
-          }}>{msgPart.message}</span> : <Text key={j} styles={{
+          }}>{msgPart.message}</span> : <ToolWindowText key={j} styles={{
             root:{
                 ...emphasisStyle as any,
                 
             }
-          }}>{msgPart.message}</Text>
+          }}>{msgPart.message}</ToolWindowText>
         }else{
           // issue with fontSize and fontWeight inheriting
           const btn =  useLinks ? <Link key={j} style={{marginLeft:'5px'}}>{msgPart.title}</Link> :

@@ -488,6 +488,18 @@ export function getActionButtonStyles(vsColors:VsColors){
                 },
               }
             }
+          },
+          "DetailsListCellText" : {
+            styles:(props:any) => {
+              console.log("DetailsListCellText");
+              return {
+                root: [{
+                  color:'inherit',
+                },
+                getVsFocusStyle(vsColors)
+                ]
+              }
+            }
           }
           
         },

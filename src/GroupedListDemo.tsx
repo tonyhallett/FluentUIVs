@@ -1,10 +1,10 @@
 import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, CheckboxVisibility, IDetailsRowProps, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
 import React, { useEffect, useRef, useState } from "react";
 import { CopyToClipboard } from "./CopyToClipboard";
+import { DetailsListCellText } from "./DetailsListCellText";
 import { GroupsItemsSelection } from "./GroupsItemsSelection";
 import { MyActionButton } from "./MyActionButton";
 import { Percentage } from "./Percentage";
-import { renderPercentage } from "./renderPercentage";
 import { VsColors } from "./themeColors";
 import { buttonHighContrastFocus, getVsFocusStyle } from "./themeStyles";
 
@@ -153,11 +153,7 @@ const columns:IDemoColumn[] = [
       const focusColor = CommonControlsColors.FocusVisualText;
       const renderName = item.isGroup;
       if(renderName){
-        return <Text data-is-focusable={true} styles={{
-          root:[{
-            color:'inherit',
-          },getVsFocusStyle(vsColors)
-        ]}}>{item.name}</Text>
+        return <DetailsListCellText data-is-focusable={true}>{item.name}</DetailsListCellText>
       }
       const clickHandler:IButtonProps['onClick'] = evt => {
         
@@ -198,15 +194,7 @@ const columns:IDemoColumn[] = [
     isSortedDescending: true,
     isResizable:true,
     onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      return <CopyToClipboard><Text styles={
-        {
-          root: [{
-            color:'inherit',
-          },
-          getVsFocusStyle(vsColors)
-          ]
-        }
-      } data-is-focusable={true}>{item.first}</Text></CopyToClipboard>
+      return <CopyToClipboard><DetailsListCellText data-is-focusable={true}>{item.first}</DetailsListCellText></CopyToClipboard>
     }
   },
   {
