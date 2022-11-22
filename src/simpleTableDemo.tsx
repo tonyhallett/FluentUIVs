@@ -1,10 +1,17 @@
-import { IDetailsListProps, DetailsList, CheckboxVisibility, SelectionMode, getFocusStyle } from "@fluentui/react";
+import { IDetailsListProps, DetailsList, CheckboxVisibility, SelectionMode, customizable, IDetailsRowProps, DetailsRow } from "@fluentui/react";
+import React from "react";
 
 type SimpleTableProps = Omit<IDetailsListProps,'role'|'checkboxVisibility'|'isHeaderVisible'|'selectionMode'|'focusZoneProps'|'onRenderRow'> 
-& {
-  environmentCommandBarTextActive:string,
-  treeViewColorsBackground:string
+
+
+@customizable('SimpleTableRow', ['theme', 'styles'], true)
+class SimpleTableRow extends React.Component<IDetailsRowProps, {}> {
+  public render(): JSX.Element {
+    return <DetailsRow {...this.props}/>
+  }
+  
 }
+
 
 function SimpleTable(props:SimpleTableProps){
     
@@ -15,31 +22,8 @@ function SimpleTable(props:SimpleTableProps){
     isHeaderVisible={false}
     selectionMode={SelectionMode.none}
     styles={props.styles}
-    onRenderRow={(rowProps, defaultRender) => {
-      rowProps!.styles = {
-        root: [{
-          background:"none",
-          borderBottom:"none",
-          color:props.environmentCommandBarTextActive, // this will not style the header text
-          selectors: {
-            "&:hover":{
-              background:"none",
-              color:props.environmentCommandBarTextActive,
-              selectors: {
-                [`.is-row-header`]: {
-                  color: props.environmentCommandBarTextActive,
-                },
-              },
-            }
-          }
-        },
-        getFocusStyle(null as any,{borderColor:"none", outlineColor:"none"})
-      ],
-        isRowHeader:{
-          color:props!.environmentCommandBarTextActive 
-        }
-      };
-      return defaultRender!(rowProps);
+    onRenderRow={(rowProps) => {
+      return <SimpleTableRow {...rowProps!}/>
     }}
     {...props} 
     />
@@ -55,8 +39,8 @@ const summaryRows: { key: string; display: string; }[] = [];
   summaryRows.push({ key: 'Coverable lines :', display: "13" });
   summaryRows.push({ key: 'Total lines :', display: "20" });
 
-export function SimpleTableDemo(props:{environmentColorsCommandBarTextActive:string, treeViewColorsBackground:string}){
-    return <SimpleTable treeViewColorsBackground={props.treeViewColorsBackground} environmentCommandBarTextActive={props.environmentColorsCommandBarTextActive}
+export function SimpleTableDemo(props:{}){
+    return <SimpleTable
         items={summaryRows}
         
         columns={[

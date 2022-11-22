@@ -7,6 +7,7 @@ export class GroupsItemsSelection extends Selection {
     super({ selectionMode: SelectionMode.single });
   }
   public initialize(groups: IGroup[], items: any[]) {
+    this.groups = [];
     groups.forEach(group => this.addGroup(group));
     this.setItemsPrivate(items);
   }
@@ -18,7 +19,7 @@ export class GroupsItemsSelection extends Selection {
     }
   }
 
-  public setItems(items: any[], shouldClear: boolean = true): void {
+  public setItems(): void {
   }
 
   private setItemsPrivate(items: any[]) {

@@ -1,12 +1,11 @@
-import { DetailsList, DetailsListLayoutMode, DetailsRow, getFocusStyle,Text, IColumn, IDetailsColumnStyleProps, IDetailsColumnStyles, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, IStyleFunctionOrObject, SelectionMode, CheckboxVisibility, IDetailsRowProps, Stack, ISliderProps, Slider, SearchBox, getInputFocusStyle, isDark, Link, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
+import { DetailsList, DetailsListLayoutMode, DetailsRow, IColumn, IDetailsHeaderProps, IDetailsList, IFocusZoneProps, IGroup, IGroupHeaderProps, SelectionMode, CheckboxVisibility, IDetailsRowProps, Stack, Slider, SearchBox, Link, IContextualMenuItem, ContextualMenu, IButtonProps } from "@fluentui/react";
 import React, { useEffect, useRef, useState } from "react";
-import { CopyToClipboard } from "./CopyToClipboard";
-import { DetailsListCellText } from "./DetailsListCellText";
-import { GroupsItemsSelection } from "./GroupsItemsSelection";
-import { MyActionButton } from "./MyActionButton";
-import { Percentage } from "./Percentage";
-import { VsColors } from "./themeColors";
-import { buttonHighContrastFocus, getVsFocusStyle } from "./themeStyles";
+import { CopyToClipboard } from "./Helper components/CopyToClipboard";
+import { DetailsListCellText } from "./vs styling/DetailsListCellText";
+import { GroupsItemsSelection } from "./utilities/GroupsItemsSelection";
+import { MyActionButton } from "./vs styling/MyActionButton";
+import { Percentage } from "./vs styling/Percentage";
+import { useConst } from "@fluentui/react-hooks";
 
 /*
     todo
@@ -130,13 +129,9 @@ const groups:IDemoGroup[] = [
 ];
 
 type IDemoColumn = Omit<IColumn, 'onRender'> & {
-  onRenderWithStyles?:(styles:any,useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
+  onRenderWithOptions?:(useLink:boolean,item:IDemoItem,index:number | undefined,column:IDemoColumn)=>React.ReactNode,
   fieldName:string
 }
-
-/* function getVsFocusStyle(vsColors:VsColors) {
-  return getFocusStyle(null as any, {borderColor:"transparent", outlineColor:vsColors.CommonControlsColors.FocusVisualText})
-} */
 
 const columns:IDemoColumn[] = [
   {
@@ -148,9 +143,7 @@ const columns:IDemoColumn[] = [
     isSorted:true,
     isSortedDescending: false,
     isResizable:true,
-    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      const {EnvironmentColors: environmentColors, CommonControlsColors} = vsColors;
-      const focusColor = CommonControlsColors.FocusVisualText;
+    onRenderWithOptions(useLink,item:IDemoItem){
       const renderName = item.isGroup;
       if(renderName){
         return <DetailsListCellText data-is-focusable={true}>{item.name}</DetailsListCellText>
@@ -158,31 +151,12 @@ const columns:IDemoColumn[] = [
       const clickHandler:IButtonProps['onClick'] = evt => {
         
       }
-      return useLink ? <Link onClick={clickHandler} styles={props => {
-        const {isDisabled} = props;
-        return {
-          root:[{
-            color:environmentColors.PanelHyperlink,
-            selectors: {
-              '.ms-Fabric--isFocusVisible &:focus': {
-                // Can't use getFocusStyle because it doesn't support wrapping links
-                // https://github.com/microsoft/fluentui/issues/4883#issuecomment-406743543
-                // Using box-shadow and outline allows the focus rect to wrap links that span multiple lines
-                // and helps the focus rect avoid getting clipped.
-                boxShadow: `0 0 0 1px ${focusColor} inset`,
-                outline: `none`,
-              },
-            },
-            
-          },
-         
-        ]
-        }}
-      }>{item.name}</Link> : 
-       <span>
+      
+      return useLink ? <Link onClick={clickHandler} >{item.name}</Link> : 
+       <>
         <MyActionButton iconProps={{iconName:"openFile"}} onClick={clickHandler}></MyActionButton>
-        <span style={{marginLeft:"5px"}}>{item.name}</span>
-        </span>
+        <DetailsListCellText style={{marginLeft:"5px"}}>{item.name}</DetailsListCellText>
+        </>
     }
   },
   {
@@ -193,8 +167,10 @@ const columns:IDemoColumn[] = [
     isSorted:true,
     isSortedDescending: true,
     isResizable:true,
-    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
-      return <CopyToClipboard><DetailsListCellText data-is-focusable={true}>{item.first}</DetailsListCellText></CopyToClipboard>
+    onRenderWithOptions(useLink,item:IDemoItem){
+      return <CopyToClipboard>
+        <DetailsListCellText data-is-focusable={true}>{item.first}</DetailsListCellText>
+        </CopyToClipboard>
     }
   },
   {
@@ -206,7 +182,8 @@ const columns:IDemoColumn[] = [
     isResizable:true,
     calculatedWidth:0,// workaround DetailsList] NaN is an invalid value for the 'width' css style property
     flexGrow:1,
-    onRenderWithStyles(vsColors:VsColors,useLink,item:IDemoItem){
+    
+    onRenderWithOptions(useLink,item:IDemoItem){
       return <Percentage percentage={item.percentage} styles={{root: {
         width: '100px'}}}/>
     }
@@ -216,11 +193,7 @@ const columns:IDemoColumn[] = [
 let _columns:any = null;
 const groupNestingDepth = 2
 export interface IGroupedListDemoProps{
-  vsColors:VsColors,
   useLink:boolean,
-  rowBackgroundFromTreeViewColors:boolean,
-  rowTextFromTreeViewColors:boolean,
-  headerColorsForHeaderText:boolean
 }
 
 const groupHeaderRowClassName = "groupHeaderRow";
@@ -231,112 +204,36 @@ interface IContextMenuDetails{
 }
 
 let lastUseLink:boolean | undefined;
-let lastRowBackgroundFromTreeViewColors:boolean | undefined;
-let lastRowTextFromTreeViewColors:boolean | undefined;
-let lastHeaderColorsForHeaderText:boolean | undefined
 let needsNewVersion = false;
-
 export function GroupedListDemo(props:IGroupedListDemoProps){
     const detailsListRef = useRef<IDetailsList>(null);
     const [contextMenuDetails, setContextMenuDetails] = useState<IContextMenuDetails>();
     const [sliderValue,setSliderValue] = useState(1);
     const [filter, setFilter] = useState("");
-    const selectionRef = useRef<GroupsItemsSelection>(new GroupsItemsSelection());
+    const selection = useConst(() => new GroupsItemsSelection());
     useEffect(() => {
       if(needsNewVersion){
         detailsListRef.current?.forceUpdate();
       }
     })
 
-    const {vsColors, headerColorsForHeaderText, rowBackgroundFromTreeViewColors, rowTextFromTreeViewColors, useLink} = props;
+    const {useLink} = props;
 
-    needsNewVersion = useLink !== lastUseLink || 
-      lastRowBackgroundFromTreeViewColors !== rowBackgroundFromTreeViewColors ||
-      lastRowTextFromTreeViewColors !== rowTextFromTreeViewColors ||
-      lastHeaderColorsForHeaderText !== headerColorsForHeaderText;
-
+    needsNewVersion = useLink !== lastUseLink
     lastUseLink = props.useLink;
-    lastRowBackgroundFromTreeViewColors = props.rowBackgroundFromTreeViewColors;
-    lastRowTextFromTreeViewColors = props.rowTextFromTreeViewColors;
-    lastHeaderColorsForHeaderText = props.headerColorsForHeaderText;
     
-    const selection = selectionRef.current;
     selection.initialize(groups,items);
 
-    const headerColors = vsColors.HeaderColors;
-    const environmentColors = vsColors.EnvironmentColors;
-    const treeViewColors = vsColors.TreeViewColors;
-    const searchControlColors = vsColors.SearchControlColors;
 
-    const rowBackground = rowBackgroundFromTreeViewColors ? treeViewColors.Background : "transparent"
-    const rowTextColor = rowTextFromTreeViewColors ? treeViewColors.BackgroundText : environmentColors.CommandBarTextActive;
-
-    const focusColor = vsColors.CommonControlsColors.FocusVisualText;
-
-    const focusStyle = getVsFocusStyle(vsColors);
-
-    const columnStyles:IStyleFunctionOrObject<IDetailsColumnStyleProps, IDetailsColumnStyles>= props => {
-      const {isActionable, theme} = props;
-      //const vsColors = getVsColors(theme);
-      
-      return {
-        root:[
-          {
-            color: headerColorsForHeaderText ? headerColors.DefaultText : environmentColors.CommandBarTextActive, // mirroring vs - alt headerColors.DefaultText,
-            background:headerColors.Default,
-            borderLeft:`1px solid ${headerColors.SeparatorLine}`
-          },
-        isActionable && {
-          selectors: {
-            ':hover': {
-              color: headerColorsForHeaderText ? headerColors.MouseOverText : environmentColors.CommandBarTextHover,// mirroring vs, alt headerColors.MouseOverText,
-              background: headerColors.MouseOver,
-              selectors:{
-                ".ms-Icon":{
-                  color:headerColors.MouseOverGlyph
-                }
-              }
-            },
-            ':active': {
-              color: headerColorsForHeaderText ? headerColors.MouseDownText : environmentColors.CommandBarTextSelected, //mirroring vs, alt headerColors.MouseDownText,
-              background: headerColors.MouseDown,
-              selectors:{
-                ".ms-Icon":{
-                  color:headerColors.MouseDownGlyph
-                }
-              }
-            },
-          },
-        },
-      ],
-      cellTitle:[
-        focusStyle,
-      ],  
-      nearIcon:{
-        color:headerColors.Glyph,
-      },
-      sortIcon:{
-        color:headerColors.Glyph
-      },
-      gripperBarVerticalStyle:{
-        color:headerColors.SeparatorLine
-      }
-     }
-    }
-    columns.forEach(c => c.styles=columnStyles);
-
-    
 
     const onRenderItemColumn:IDetailsRowProps["onRenderItemColumn"] = (item,index, column) => {
       const demoColumn = column as IDemoColumn;
-      if(demoColumn!.onRenderWithStyles){
-        return demoColumn.onRenderWithStyles(vsColors,props.useLink, item, index, demoColumn);
+      if(demoColumn!.onRenderWithOptions){
+        return demoColumn.onRenderWithOptions(props.useLink, item, index, demoColumn);
       }else{
         return item[demoColumn.fieldName];
       }
     }
-
-    
 
     const onHideContextualMenu = React.useCallback(() => setContextMenuDetails(undefined), []);
     const contextMenu = contextMenuDetails ? <ContextualMenu 
@@ -358,7 +255,6 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
           ariaLabel: 'Clear text',
           styles:{
             root: [
-              getFocusStyle(null as any, { inset: 1, highContrastStyle: buttonHighContrastFocus, borderColor: 'transparent',outlineColor:focusColor }),
               { height: 'auto'}], 
             
           }
@@ -425,8 +321,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               } as any 
               
               const index = selection.getGroupIndex(props!.group!);
-              
-              return <DetailsRow {...props} 
+              return <DetailsRow
                className={groupHeaderRowClassName}
                selection={selection}
                focusZoneProps={focusZoneProps}
@@ -437,78 +332,6 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
                 checkboxVisibility={CheckboxVisibility.hidden}
                 itemIndex={index}
                 onRenderItemColumn={onRenderItemColumn}
-                styles={(styleProps) => {
-                  const {isSelected, } = styleProps
-                  return {
-                    root: [{
-                      background:"inherit",
-                      borderBottom:"none",
-                      color:"inherit",
-                      selectors: {
-                        "&:hover":{
-                          background:"inherit",
-                          color:"inherit",
-                        }
-                      }
-                    },
-                    isSelected && { // todo this is common with onRenderRow - refactor
-                      color:treeViewColors.SelectedItemInactiveText,
-                      background: treeViewColors.SelectedItemInactive,
-                      borderBottom: "none",
-                      selectors: {
-                        ['.ms-DetailsRow-cell button.ms-Link']:{
-                          color:treeViewColors.SelectedItemInactiveText
-                        },
-                        '&:active': {
-                          ['.ms-DetailsRow-cell button.ms-Link']:{
-                            color:treeViewColors.SelectedItemActiveText
-                          },
-                        },
-                
-      
-                        '&:before': {
-                          borderTop: "none",
-                        },
-                
-                        // Selected State hover
-                        '&:hover': {
-                          color: treeViewColors.SelectedItemInactiveText,
-                          background: treeViewColors.SelectedItemInactive,
-                        },
-                
-                        // Focus state
-                        '&:focus': {
-                          color: treeViewColors.SelectedItemActiveText,
-                          background: treeViewColors.SelectedItemActive,
-                          selectors: {
-                            [`.ms-DetailsRow-cell`]: {
-                              color: treeViewColors.SelectedItemActiveText,
-                              background: treeViewColors.SelectedItemActive,
-                            },
-                          },
-                        },
-                
-                        // Focus and hover state
-                        '&:focus:hover': {
-                          color: treeViewColors.SelectedItemActiveText,
-                          background: treeViewColors.SelectedItemActive,
-                          selectors: {
-                            [`.ms-DetailsRow-cell`]: {
-                              color: treeViewColors.SelectedItemActiveText,
-                              background: treeViewColors.SelectedItemActive,
-                            },
-                          },
-                        },
-                        '&:focus-within':{
-                          color: treeViewColors.SelectedItemActiveText,
-                          background: treeViewColors.SelectedItemActive,
-                        }
-                        
-                      }},
-                    focusStyle
-                    ]
-                  }
-                }}
                 />
             }
           },
@@ -529,165 +352,16 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
               'aria-label': 'expand collapse group',
               'data-is-focusable':'true'
             } as any
-            const styles:IGroupHeaderProps["styles"] = styleProps  => {
-              return {
-              root:[{
-                borderBottom: `1px solid ${headerColors.SeparatorLine}`,
-                userSelect:'text',
-                background: rowBackground,// treeViewColors.Background,
-                color: rowTextColor,//environmentColors.CommandBarTextActive, // *** mirroring vs
-                selectors: {
-                  ':hover': {
-                    background: rowBackground,// treeViewColors.Background,
-                    color: rowTextColor,// environmentColors.CommandBarTextActive // *** mirroring vs
-                  },
-                },
-                
-              },
-              
-              
-              focusStyle
-              ],
-              expand:[{  
-                color:headerColors.Glyph,
-                selectors: { // ignoring selected state
-                  ':hover': {
-                    color: headerColors.MouseOverGlyph,
-                    backgroundColor: headerColors.MouseOver
-                  },
-                  ':active': {
-                    color: headerColors.MouseDownGlyph,
-                    backgroundColor: headerColors.MouseDown
-                  },
-                },
-                
-                },focusStyle
-              ],
-              cellSizer: [
-                {
-                  selectors: {
-                    ':after': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      bottom: 0,
-                      width: 1,
-                      background: headerColors.MouseOver,
-                      opacity: 0,
-                      left: '50%',
-                    },
-                    // could change the boxShadow
-                    /* [`&.${classNames.isResizing}:after`]: [
-                      cellSizerFadeInStyles,
-                      {
-                        boxShadow: '0 0 5px 0 rgba(0, 0, 0, 0.4)',
-                      },
-                    ], */
-                  },
-                },
-              ],
-            }}
-            props!.styles = styles;
             return defaultRender!(props)
           }
         }}
         onRenderRow={(rowProps, defaultRender) => {
-          rowProps!.styles = (detailsRowStyleProps) => {
-            const {isSelected} = detailsRowStyleProps;
-            return {
-              fields:{
-                alignItems:"center"
-              },
-              root: [
-                {
-                  background: rowBackground,//  treeViewColors.Background, // mirroring vs, docs say "transparent",
-                  borderBottom:"none",
-                  color: rowTextColor,// environmentColors.CommandBarTextActive,
-                  selectors: {
-                    "&:hover":{
-                      background:rowBackground,//treeViewColors.Background, // mirroring vs, docs say "transparent",
-                      color:rowTextColor,// environmentColors.CommandBarTextActive,
-                      selectors: {
-                        [`.ms-DetailsRow-cell > .ms-Link`]: {
-                          color: environmentColors.PanelHyperlink,
-                          textDecoration:"underline",
-                          cursor:"pointer"
-                        }
-                      },
-    
-                    }
-                  }
-                },
-              
-                isSelected && {
-                  color:treeViewColors.SelectedItemInactiveText,
-                  background: treeViewColors.SelectedItemInactive,
-                  borderBottom: "none",
-                  selectors: {
-                    ['.ms-DetailsRow-cell button.ms-Link']:{
-                      color:treeViewColors.SelectedItemInactiveText
-                    },
-                    '&:active': {
-                      ['.ms-DetailsRow-cell button.ms-Link']:{
-                        color:treeViewColors.SelectedItemActiveText
-                      },
-                    },
-            
-
-                    '&:before': {
-                      borderTop: "none",
-                    },
-            
-                    // Selected State hover
-                    '&:hover': {
-                      color: treeViewColors.SelectedItemInactiveText,
-                      background: treeViewColors.SelectedItemInactive,
-                    },
-            
-                    // Focus state
-                    '&:focus': {
-                      color: treeViewColors.SelectedItemActiveText,
-                      background: treeViewColors.SelectedItemActive,
-                      selectors: {
-                        [`.ms-DetailsRow-cell`]: {
-                          color: treeViewColors.SelectedItemActiveText,
-                          background: treeViewColors.SelectedItemActive,
-                        },
-                        ['.ms-DetailsRow-cell button.ms-Link']:{
-                          color:treeViewColors.SelectedItemActiveText
-                        },
-                      },
-                    },
-            
-                    // Focus and hover state
-                    '&:focus:hover': {
-                      color: treeViewColors.SelectedItemActiveText,
-                      background: treeViewColors.SelectedItemActive,
-                      selectors: {
-                        [`.ms-DetailsRow-cell`]: {
-                          color: treeViewColors.SelectedItemActiveText,
-                          background: treeViewColors.SelectedItemActive,
-                        },
-                      },
-                    },
-                    '&:focus-within':{
-                      color: treeViewColors.SelectedItemActiveText,
-                      background: treeViewColors.SelectedItemActive,
-                    }
-                    
-                  },
-                },
-                focusStyle,
-              ],
-              // todo requires override ?
-              /* cell:{
-                selectors:{
-                  "[data-is-focusable='true']":
-                }
-              } */
-            }
-          };
           rowProps!.groupNestingDepth = 2; // todo calculate
+          rowProps!.styles = {
+            fields:{
+              alignItems:"center"
+            },
+          }
           return defaultRender!(rowProps);
         }}
         onRenderItemColumn={onRenderItemColumn}
@@ -701,36 +375,13 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
             } */
             detailsHeaderProps!.styles={
               root:{
-                background:headerColors.Default,
-                borderBottom: `1px solid ${headerColors.SeparatorLine}`,
                 paddingTop:'0px'//***************************************** 
-                // should this be done ?
-                //borderTop: `1px solid ${headerColors.SeparatorLine}`,
-                //borderLeft: `1px solid ${headerColors.SeparatorLine}`,
-                //borderRight: `1px solid ${headerColors.SeparatorLine}`,
-                
               },
-              cellIsGroupExpander:[
-                focusStyle,
-                {
-                  color:headerColors.Glyph,
-                  selectors: {
-                    ':hover': {
-                      color: headerColors.MouseOverGlyph,
-                      backgroundColor: headerColors.MouseOver
-                    },
-                    ':active': {
-                      color: headerColors.MouseDownGlyph,
-                      backgroundColor: headerColors.MouseDown
-                    },
-                  },
-
-              }],
-              
             }
             return defaultRender(detailsHeaderProps)
           }
         }
+        
     />
     </div>
 }

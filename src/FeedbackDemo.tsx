@@ -1,27 +1,8 @@
 import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
-import { MyActionButton } from "./MyActionButton";
-import { VsColors } from "./themeColors";
+import { MyActionButton } from "./vs styling/MyActionButton";
 
 
-export function FeedbackDemo(props:{
-    vsColors:VsColors
-}){
-
-  const {vsColors} = props;
-  const {EnvironmentColors:environmentColors} = vsColors;
-
-  const buttonStyles:ICommandBarItemProps["buttonStyles"] = {
-    root:{
-        color:environmentColors.CommandBarTextActive,
-        backgroundColor:"transparent",
-    },
-    label:{
-        color:environmentColors.CommandBarTextActive
-    },
-    icon:{
-        color:environmentColors.CommandBarTextActive
-    }
-  }
+export function FeedbackDemo(props:{}){
 
   let items:ICommandBarItemProps[] = [
     {
@@ -33,7 +14,6 @@ export function FeedbackDemo(props:{
         alert("Beer")
         //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.buyMeACoffee();
       },
-      buttonStyles
     },
     {
       key:'logIssueOrSuggestion',
@@ -44,14 +24,12 @@ export function FeedbackDemo(props:{
         alert("issue")
         //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.logIssueOrSuggestion();
       },
-      buttonStyles
     },
     {
       key:'rateAndReview',
       text:'Rate and review',
       iconProps:{iconName:'review'},
       ariaLabel:'Review',
-      buttonStyles,
       onClick(){
         alert("review")
         //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.rateAndReview();
@@ -69,28 +47,15 @@ export function FeedbackDemo(props:{
   } 
 
 
-  // I should lokkd at sub compoennet styles again.
   return <CommandBar buttonAs={ButtonAs} overflowButtonProps={
     {
-        // to do when I have some overflow items
-        // the styles are for a CommandBarButton
-        styles:{
-            // can ossibly style the menu here
-        },
-        // this is incorrectly typed.
-        // to do when have a menu
-        /* menuProps:{
-            styles:{
-
-            }
-        } */
     }
   } styles={{
     root:{
         backgroundColor:'none',
         border:`none`,
         padding:'0px'
-        // add border
+        // add border ?
     }
     
 

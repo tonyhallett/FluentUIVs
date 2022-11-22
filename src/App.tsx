@@ -2,21 +2,23 @@
 // In React 17 you no longer need to import react when writing JSX
 
 import { Checkbox, ContextualMenu, CustomizerContext, IDragOptions, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
-import { useRef, useState } from "react";
-import { vsThemes} from "./themeColors";
+import { useState } from "react";
+import { vsThemes} from "./vs styling/themeColors";
 import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { LogDemo } from "./LogDemo";
 
 import { GroupedListDemo } from "./GroupedListDemo";
-import { useBodyToolWindow } from "./useBody";
+import { useBodyToolWindow } from "./utilities/useBody";
 import { FeedbackDemo } from "./FeedbackDemo";
 
 import { ControlsDemo } from "./ControlDemo";
-import { getBodyStyles, getCustomizationStyling,} from "./themeStyles";
+import { getBodyStyles, VsCustomizerContext,} from "./vs styling/themeStyles";
 import { SimpleTableDemo } from "./SimpleTableDemo";
-import { Long, Wide } from "./LongAndWide";
-import React from "react";
-import { MyActionButton } from "./MyActionButton";
+import { Long, Wide } from "./Helper components/LongAndWide";
+import { MyActionButton } from "./vs styling/MyActionButton";
+import { useBoolean } from "@fluentui/react-hooks";
+import { useCycle } from "./utilities/hooks/useCycle";
+import { useRefInitOnce } from "./utilities/hooks/useRefInitOnce";
 
 //https://github.com/microsoft/fluentui/issues/22895
 export const VisualStudioIDELogo32Icon =  createSvgIcon({
@@ -66,70 +68,57 @@ registerIcons({
 
 
 
-
-
-
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
-    const [selectedThemeIndex,setSelectedThemeIndex] = useState(0);
-    const [coverageRunning,setCoverageRunning] = useState(false);
-    const [useHyperlink,setUseHyperlink] = useState(false);
-    const [addScrollbars, toggleAddScrollbars] = useState(false);
+    const [selectedThemeIndex,nextTheme, previousTheme] = useCycle(vsThemes)
+    const [coverageRunning,{toggle:toggleCoverageRunning}] = useBoolean(false);
+    const [useHyperlink,{toggle:toggleUseHyperlink}] = useBoolean(false);
+    const [addScrollbars, {toggle:toggleAddScrollbars}] = useBoolean(false);
 
-    const [rowBackgroundFromTreeViewColors,setRowBackgroundFromTreeViewColors] = useState(true);
-    const [rowTextFromTreeViewColors,setRowTextFromTreeViewColors] = useState(false);
-    const [headerColorsForHeaderText,setHeaderColorsForHeaderText] = useState(false);
+    const [rowBackgroundFromTreeViewColors,{toggle:toggleRowBackgroundFromTreeViewColors}] = useBoolean(true);
+    const [rowTextFromTreeViewColors,{toggle:toggleRowTextFromTreeViewColors}] = useBoolean(false);
+    const [headerColorsForHeaderText,{toggle:toggleHeaderColorsForHeaderText}] = useBoolean(false);
     
-    const customizationStyling = useRef(getCustomizationStyling(vsThemes[0][1]))
-
-    const nextTheme= React.useCallback(() => {
-      var next = selectedThemeIndex < vsThemes.length - 1 ? selectedThemeIndex+1 : 0;
-      setSelectedThemeIndex(next);
-    }, [selectedThemeIndex])
-
-    const previousTheme = React.useCallback(() => {
-      var next = selectedThemeIndex === 0 ? vsThemes.length - 1 : selectedThemeIndex-1;
-      setSelectedThemeIndex(next);
-    },[selectedThemeIndex])
+    const customizationStyling = useRefInitOnce(new VsCustomizerContext(
+      vsThemes[selectedThemeIndex][1],
+      rowBackgroundFromTreeViewColors,
+      rowTextFromTreeViewColors,
+      headerColorsForHeaderText
+      ))
     
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeColors = selectedTheme[1];
-    if(customizationStyling.current.vsColors !== selectedThemeColors){
-      customizationStyling.current = getCustomizationStyling(selectedThemeColors);
-    }
+    customizationStyling.current = customizationStyling.current.getNext(
+      selectedThemeColors,
+      rowBackgroundFromTreeViewColors,
+      rowTextFromTreeViewColors,
+      headerColorsForHeaderText
+      );
 
-    const environmentColors = selectedThemeColors.EnvironmentColors;
     useBodyToolWindow(getBodyStyles(selectedThemeColors));
-
-    
-    
-    const treeViewColors = selectedThemeColors.TreeViewColors;
 
     const alwaysRender = true;
     
-    const items:JSX.Element[] = [
+    const pivotItems:JSX.Element[] = [
       <PivotItem key={0} itemKey='scrollbars' headerText='Scrollbars' alwaysRender={alwaysRender}>
         {addScrollbars && <><Long/><Wide/></>}
       </PivotItem>,
       <PivotItem key={1} itemKey='log' headerText='Log' alwaysRender={alwaysRender}>
-        <LogDemo vsColors={selectedThemeColors} useLinks={useHyperlink}/>
+        <LogDemo useLinks={useHyperlink}/>
       </PivotItem>,
       <PivotItem key={2} itemKey='simpleTable' headerText='Simple Table' alwaysRender={alwaysRender}>
-        <SimpleTableDemo treeViewColorsBackground={treeViewColors.Background} environmentColorsCommandBarTextActive={environmentColors.CommandBarTextActive}/>
+        <SimpleTableDemo/>
       </PivotItem>,
       <PivotItem key={3} itemKey='detailsList' headerText='Grouped List' alwaysRender={alwaysRender}>
-        <GroupedListDemo headerColorsForHeaderText={headerColorsForHeaderText} 
+        <GroupedListDemo 
           useLink={useHyperlink} 
-          vsColors={selectedThemeColors} 
-          rowBackgroundFromTreeViewColors={rowBackgroundFromTreeViewColors} 
-          rowTextFromTreeViewColors={rowTextFromTreeViewColors}/>
+          />
     </PivotItem>,
     <PivotItem key={4} itemKey="feedback" headerText='Feedback' alwaysRender={alwaysRender}>
-      <FeedbackDemo vsColors={selectedThemeColors} 
-      />
+      <FeedbackDemo />
     </PivotItem>,
     <PivotItem key={5} itemKey="controls" headerText='Controls' alwaysRender={alwaysRender}>
-      <ControlsDemo vsColors={selectedThemeColors}></ControlsDemo>
+      <ControlsDemo></ControlsDemo>
     </PivotItem>,
     
     ]
@@ -137,8 +126,9 @@ export function App() {
     const percentComplete = coverageRunning ? undefined : 0;
     
     
-    return  <CustomizerContext.Provider value={customizationStyling.current}>
-    <>
+    return  (
+    <CustomizerContext.Provider value={customizationStyling.current}>
+      <>
         <Modal
               /*
                 this version also suffers with
@@ -181,20 +171,20 @@ export function App() {
               >
                   
                 <div style={{padding:'5px'}}>
-                  <Checkbox label="Use hyperlink"  checked={useHyperlink} onChange={() =>setUseHyperlink(!useHyperlink)}/>
+                  <Checkbox label="Use hyperlink"  checked={useHyperlink} onChange={toggleUseHyperlink}/>
                   <Label>{selectedTheme[0]}</Label>
                   
                   <MyActionButton iconProps={{iconName:"previous"}} onClick={previousTheme}>Previous theme</MyActionButton>
                   <MyActionButton iconProps={{iconName:"next"}} onClick={nextTheme}>Next theme</MyActionButton>
-                  <Checkbox label="Add scrollbars"  checked={addScrollbars} onChange={() =>toggleAddScrollbars(!addScrollbars)}/>
-                  <Checkbox label="Coverage running"  checked={coverageRunning} onChange={() => setCoverageRunning(!coverageRunning)}/>
+                  <Checkbox label="Add scrollbars"  checked={addScrollbars} onChange={toggleAddScrollbars}/>
+                  <Checkbox label="Coverage running"  checked={coverageRunning} onChange={toggleCoverageRunning}/>
 
-                  <Checkbox label="row background from tvc "  checked={rowBackgroundFromTreeViewColors} onChange={() => setRowBackgroundFromTreeViewColors(!rowBackgroundFromTreeViewColors)}/>
-                  <Checkbox label="row text from tvc "  checked={rowTextFromTreeViewColors} onChange={() =>setRowTextFromTreeViewColors(!rowTextFromTreeViewColors)}/>
-                  <Checkbox label="header colors for header text ! "  checked={headerColorsForHeaderText} onChange={() =>setHeaderColorsForHeaderText(!headerColorsForHeaderText)}/>
+                  <Checkbox label="row background from tvc "  checked={rowBackgroundFromTreeViewColors} onChange={toggleRowBackgroundFromTreeViewColors}/>
+                  <Checkbox label="row text from tvc "  checked={rowTextFromTreeViewColors} onChange={toggleRowTextFromTreeViewColors}/>
+                  <Checkbox label="header colors for header text ! "  checked={headerColorsForHeaderText} onChange={toggleHeaderColorsForHeaderText}/>
                 </div>
     
-          </Modal>
+        </Modal>
         <ProgressIndicator barHeight={10} percentComplete={percentComplete} />
         
         <Pivot linkFormat="links" styles={(_) => {
@@ -213,8 +203,8 @@ export function App() {
                 }
             }} 
             selectedKey={selectedTabKey}>
-            {items}
+            {pivotItems}
         </Pivot>
       </>
-        </CustomizerContext.Provider>
+    </CustomizerContext.Provider>)
 }

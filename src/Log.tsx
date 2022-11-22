@@ -1,8 +1,9 @@
-import { Text, IActivityItemProps, Icon, ActivityItem, Link } from "@fluentui/react"
+import { IActivityItemProps, Icon, ActivityItem, Link, customizable, mergeStyles } from "@fluentui/react"
+import React from "react"
 import { CSSProperties } from "react"
-import { MyActionButton } from "./MyActionButton"
-import { VsColors } from "./themeColors"
-import { ToolWindowText } from "./ToolWindowText"
+import { MyActionButton } from "./vs styling/MyActionButton"
+import { VsColors } from "./vs styling/themeColors"
+import { ToolWindowText } from "./vs styling/ToolWindowText"
 
 export enum Emphasis{
     None = 0,
@@ -110,10 +111,22 @@ export type LogProps = {
     logMessages:LogMessage[],
     clearLogMessages:() => void,
     useLinks:boolean,
-    vsColors:VsColors
 }
+
+@customizable('VsSpan', ['theme', 'styles'], true)
+export class VsSpan extends React.Component<{styles?:any}, {}> {
+  public render(): JSX.Element {
+    const {styles, ...rest} = this.props;
+    const className = mergeStyles(styles);
+    return (
+      <span className={className} {...rest}/>
+        
+    )
+  }
+}
+
 export function Log(props:LogProps) {
-    const {logMessages, clearLogMessages, useLinks, vsColors} = props;
+    const {logMessages, clearLogMessages, useLinks} = props;
 
     const activityItemsOrBreaks:any[] = [];
     logMessages.forEach((logMessage,i) => {
@@ -122,7 +135,6 @@ export function Log(props:LogProps) {
       logMessage.message.map((msgPart,j) => {
         if(msgPart.type === 'emphasized' ){
           const emphasisStyle:CSSProperties={
-            color:vsColors.EnvironmentColors.ToolWindowText,
           }
           if(msgPart.emphasis & Emphasis.Bold){
             emphasisStyle.fontWeight='bold';
@@ -134,11 +146,13 @@ export function Log(props:LogProps) {
             emphasisStyle.textDecoration = 'underline';
           }
           return useLinks ? 
-           <span key={j} style={{
-            
-            ...emphasisStyle as any,
-            display:"inline"
-          }}>{msgPart.message}</span> : <ToolWindowText key={j} styles={{
+            <VsSpan key={j} styles={
+              {
+                root:emphasisStyle
+              }
+            }>{msgPart.message}</VsSpan> :
+           
+          <ToolWindowText key={j} styles={{
             root:{
                 ...emphasisStyle as any,
                 
@@ -166,7 +180,6 @@ export function Log(props:LogProps) {
           styles={{
             root:{
               marginLeft:'10px',
-              color:vsColors.EnvironmentColors.ToolWindowText
             },
   
           }}
