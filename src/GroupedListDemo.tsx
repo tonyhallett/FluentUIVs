@@ -278,7 +278,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
         }
         componentRef={detailsListRef}
         onShouldVirtualize={() => false} //https://github.com/microsoft/fluentui/issues/21367 https://github.com/microsoft/fluentui/issues/20825
-        layoutMode={DetailsListLayoutMode.justified}
+        layoutMode={DetailsListLayoutMode.fixedColumns} // justified always flashes unless have set all the column sizes
         selection={selection}
         selectionMode={SelectionMode.single} // due to defaultProps ! does not take from selection !
         checkboxVisibility={CheckboxVisibility.hidden}

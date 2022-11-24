@@ -17,10 +17,13 @@ export function getScrollbarStyle(
   scrollBarThumbBorderHoverColor: string,
   scrollBarThumbBorderActiveColor: string,
   arrowBorderHoverColor: string,
-  arrowBorderActiveColor: string
-
+  arrowBorderActiveColor: string,
+  scrollbarSize = 18,
+  thumbSize = 8,
 ) {
-  function getVerticalArrow(points: string, fill: string) {
+  const hide = (scrollbarSize - thumbSize)/2;
+  const arrowShift = (scrollbarSize - thumbSize/2)/2;
+  function getArrow(points: string, fill: string) {
 
     return `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='${fill}'><polygon points='${points}'/></svg>")`;
   }
@@ -30,34 +33,29 @@ export function getScrollbarStyle(
     const points: [string, string] = isHorizontal ? ["0,50 50,100 50,0", "0,0 0,100 50,50"] : ["50,00 0,50 100,50", "0,0 100,0 50,50"];
     return {
       // left or up
+      //
       [`::-webkit-scrollbar-button:single-button:${vOrH}:decrement`]: {
-        // which may change
-        height: isHorizontal ? "12px" : '12px',
-        width: isHorizontal ? "12px" : '16px',
-        backgroundPosition: isHorizontal ? "3px 3px" : 'center 4px',
-
-        backgroundImage: getVerticalArrow(points[0], arrowGlyphBackgroundColor)
+        backgroundPosition: isHorizontal ? `${arrowShift}px center` : `center ${arrowShift}px`,
+        backgroundImage: getArrow(points[0], arrowGlyphBackgroundColor)
       },
       [`::-webkit-scrollbar-button:single-button:${vOrH}:decrement:hover`]: {
-        backgroundImage: getVerticalArrow(points[0], arrowGlyphBackgroundHoverColor)
+        backgroundImage: getArrow(points[0], arrowGlyphBackgroundHoverColor)
       },
       [`::-webkit-scrollbar-button:single-button:vertical:decrement:active`]: {
-        backgroundImage: getVerticalArrow(points[0], arrowGlyphBackgroundActiveColor)
+        backgroundImage: getArrow(points[0], arrowGlyphBackgroundActiveColor)
       },
 
       // right or down
       [`::-webkit-scrollbar-button:single-button:${vOrH}:increment`]: {
-        height: isHorizontal ? "12px" : '12px',
-        width: isHorizontal ? "12px" : '16px',
-        backgroundPosition: isHorizontal ? "3px 3px" : 'center 2px',
-
-        backgroundImage: getVerticalArrow(points[1], arrowGlyphBackgroundColor)
+        
+        backgroundPosition: isHorizontal ? `${arrowShift}px center` : `center ${arrowShift}px`,
+        backgroundImage: getArrow(points[1], arrowGlyphBackgroundColor)
       },
       [`::-webkit-scrollbar-button:single-button:${vOrH}:increment:hover`]: {
-        backgroundImage: getVerticalArrow(points[1], arrowGlyphBackgroundHoverColor)
+        backgroundImage: getArrow(points[1], arrowGlyphBackgroundHoverColor)
       },
       [`::-webkit-scrollbar-button:single-button:${vOrH}:increment:active`]: {
-        backgroundImage: getVerticalArrow(points[1], arrowGlyphBackgroundActiveColor)
+        backgroundImage: getArrow(points[1], arrowGlyphBackgroundActiveColor)
       }
     };
   }
@@ -69,10 +67,12 @@ export function getScrollbarStyle(
       border:`1px solid ${borderColor}`
     } */
   }
+
+
   return {
     "::-webkit-scrollbar": {
-      width: "12px",
-      height: "12px",
+      width: `${scrollbarSize}px`,
+      height: `${scrollbarSize}px`,
     },
 
     "::-webkit-scrollbar-corner": {
@@ -92,14 +92,14 @@ export function getScrollbarStyle(
     },
     "::-webkit-scrollbar-thumb:vertical": {
       //...getBorder(scrollBarThumbBorderColor)
-      borderLeft: `1px solid ${trackColor}`,
-      borderRight: `3px solid ${trackColor}`,
+      borderLeft: `${hide}px solid ${trackColor}`,
+      borderRight: `${hide}px solid ${trackColor}`,
       backgroundClip: "content-box",
     },
     "::-webkit-scrollbar-thumb:horizontal": {
       //...getBorder(scrollBarThumbBorderColor)
-      borderTop: `1px solid ${trackColor}`,
-      borderBottom: `3px solid ${trackColor}`,
+      borderTop: `${hide}px solid ${trackColor}`,
+      borderBottom: `${hide}px solid ${trackColor}`,
       backgroundClip: "content-box",
     },
     "::-webkit-scrollbar-thumb:hover": {
@@ -113,10 +113,12 @@ export function getScrollbarStyle(
 
     //the buttons on the scrollbar (arrows pointing upwards and downwards that scroll one line at a time
     "::-webkit-scrollbar-button:single-button": {
+      height:`${scrollbarSize}px`,
+      width:`${scrollbarSize}px`,
       backgroundColor: arrowBackgroundColor,
       ...getBorder(scrollBarBorderColor),
       display: 'block',
-      backgroundSize: '10px',
+      backgroundSize: `${thumbSize}px`,//***************************************************************************************
       backgroundRepeat: 'no-repeat'
     },
     "::-webkit-scrollbar-button:single-button:hover": {

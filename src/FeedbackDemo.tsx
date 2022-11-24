@@ -1,4 +1,4 @@
-import { CommandBar, ICommandBarItemProps } from "@fluentui/react";
+import { ICommandBarItemProps } from "@fluentui/react";
 import { MyActionButton } from "./vs styling/MyActionButton";
 
 
@@ -33,31 +33,11 @@ export function FeedbackDemo(props:{}){
       onClick(){
         alert("review")
         //(window as any).chrome.webview.hostObjects.fccResourcesNavigator.rateAndReview();
-      }
+      },
     }
   ]
 
-  const numItems = 10;
-  for(let i = items.length;i<numItems;i++){
-    items.push({...items[0],key:(items.length + i).toString()})
-  }
-  
-  const ButtonAs:any = (props:ICommandBarItemProps) => {
-    return <MyActionButton style={{marginRight:'5px'}} onClick={props.onClick as any} iconProps={props.iconProps}>{props.text} </MyActionButton>
-  } 
-
-
-  return <CommandBar buttonAs={ButtonAs} overflowButtonProps={
-    {
-    }
-  } styles={{
-    root:{
-        backgroundColor:'none',
-        border:`none`,
-        padding:'0px'
-        // add border ?
-    }
-    
-
-  }} items={items} />
+  return  <>
+    {items.map(props => <MyActionButton key={props.key} style={{marginRight:'5px'}} onClick={props.onClick as any} iconProps={props.iconProps}>{props.text} </MyActionButton>)}
+  </>
 }

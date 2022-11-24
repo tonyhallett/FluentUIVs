@@ -1,7 +1,7 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { Checkbox, ContextualMenu, CustomizerContext, IDragOptions, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons,  } from "@fluentui/react";
+import { Checkbox, ContextualMenu, CustomizerContext, IDragOptions, IPivotProps, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons, Slider,  } from "@fluentui/react";
 import { useState } from "react";
 import { vsThemes} from "./vs styling/themeColors";
 import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
@@ -19,6 +19,8 @@ import { MyActionButton } from "./vs styling/MyActionButton";
 import { useBoolean } from "@fluentui/react-hooks";
 import { useCycle } from "./utilities/hooks/useCycle";
 import { useRefInitOnce } from "./utilities/hooks/useRefInitOnce";
+import { TabColours } from "./Helper components/TabColours";
+import { installedFonts } from "./vs styling/installedFonts";
 
 //https://github.com/microsoft/fluentui/issues/22895
 export const VisualStudioIDELogo32Icon =  createSvgIcon({
@@ -71,19 +73,27 @@ registerIcons({
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
     const [selectedThemeIndex,nextTheme, previousTheme] = useCycle(vsThemes)
+    const [selectedFontIndex,nextFont, previousFont] = useCycle(installedFonts)
     const [coverageRunning,{toggle:toggleCoverageRunning}] = useBoolean(false);
     const [useHyperlink,{toggle:toggleUseHyperlink}] = useBoolean(false);
     const [addScrollbars, {toggle:toggleAddScrollbars}] = useBoolean(false);
+    const [useLinksFormat, {toggle:toggleLinkFormat}] = useBoolean(true);
 
+    const [surroundTabs, {toggle:toggleSurroundTabs}] = useBoolean(false);
     const [rowBackgroundFromTreeViewColors,{toggle:toggleRowBackgroundFromTreeViewColors}] = useBoolean(true);
     const [rowTextFromTreeViewColors,{toggle:toggleRowTextFromTreeViewColors}] = useBoolean(false);
     const [headerColorsForHeaderText,{toggle:toggleHeaderColorsForHeaderText}] = useBoolean(false);
+    const [fontSize, setFontSize] = useState(10);
+
     
     const customizationStyling = useRefInitOnce(new VsCustomizerContext(
       vsThemes[selectedThemeIndex][1],
       rowBackgroundFromTreeViewColors,
       rowTextFromTreeViewColors,
-      headerColorsForHeaderText
+      headerColorsForHeaderText,
+      surroundTabs,
+      fontSize,
+      installedFonts[selectedFontIndex]
       ))
     
     const selectedTheme = vsThemes[selectedThemeIndex];
@@ -92,11 +102,16 @@ export function App() {
       selectedThemeColors,
       rowBackgroundFromTreeViewColors,
       rowTextFromTreeViewColors,
-      headerColorsForHeaderText
+      headerColorsForHeaderText,
+      surroundTabs,
+      fontSize,
+      installedFonts[selectedFontIndex]
       );
 
     useBodyToolWindow(getBodyStyles(selectedThemeColors));
 
+    const linkFormat:IPivotProps['linkFormat'] = useLinksFormat ? "links" : "tabs"; 
+    // has to be true or any column resizing is lost !
     const alwaysRender = true;
     
     const pivotItems:JSX.Element[] = [
@@ -119,6 +134,9 @@ export function App() {
     </PivotItem>,
     <PivotItem key={5} itemKey="controls" headerText='Controls' alwaysRender={alwaysRender}>
       <ControlsDemo></ControlsDemo>
+    </PivotItem>,
+    <PivotItem key={6} itemKey="tabColours" headerText='Tab Colours' alwaysRender={alwaysRender}>
+      <TabColours vsColors={selectedThemeColors}/>
     </PivotItem>,
     
     ]
@@ -176,18 +194,31 @@ export function App() {
                   
                   <MyActionButton iconProps={{iconName:"previous"}} onClick={previousTheme}>Previous theme</MyActionButton>
                   <MyActionButton iconProps={{iconName:"next"}} onClick={nextTheme}>Next theme</MyActionButton>
+                  <br/>
+                  <MyActionButton iconProps={{iconName:"previous"}} onClick={previousFont}>Previous font</MyActionButton>
+                  <MyActionButton iconProps={{iconName:"next"}} onClick={nextFont}>Next font</MyActionButton>
+
                   <Checkbox label="Add scrollbars"  checked={addScrollbars} onChange={toggleAddScrollbars}/>
                   <Checkbox label="Coverage running"  checked={coverageRunning} onChange={toggleCoverageRunning}/>
 
                   <Checkbox label="row background from tvc "  checked={rowBackgroundFromTreeViewColors} onChange={toggleRowBackgroundFromTreeViewColors}/>
                   <Checkbox label="row text from tvc "  checked={rowTextFromTreeViewColors} onChange={toggleRowTextFromTreeViewColors}/>
                   <Checkbox label="header colors for header text ! "  checked={headerColorsForHeaderText} onChange={toggleHeaderColorsForHeaderText}/>
+
+                  <Checkbox label="use link format"  checked={useLinksFormat} onChange={toggleLinkFormat}/>
+                  <Checkbox styles={
+                    {
+                      root:{
+                        visibility:useLinksFormat ? "collapse" : "visible"
+                      }
+                    }
+                  } label="surround tabs"  checked={surroundTabs} onChange={toggleSurroundTabs}/>
+                  <Slider showValue value={fontSize} min={10} max={19} onChange={num => setFontSize(num)} />
                 </div>
     
         </Modal>
         <ProgressIndicator barHeight={10} percentComplete={percentComplete} />
-        
-        <Pivot linkFormat="links" styles={(_) => {
+        <Pivot linkFormat={linkFormat} styles={(_) => {
             return {
                 itemContainer:{
                   marginTop:"5px",
@@ -205,6 +236,7 @@ export function App() {
             selectedKey={selectedTabKey}>
             {pivotItems}
         </Pivot>
+        
       </>
     </CustomizerContext.Provider>)
 }

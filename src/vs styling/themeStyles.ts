@@ -1,4 +1,4 @@
-import { getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsRowStyleProps, IDropdownStyleProps, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IProgressIndicatorStyles, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps, ZIndexes } from "@fluentui/react";
+import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsRowStyleProps, IDropdownStyleProps, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps, ZIndexes } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 import { getScrollbarStyle } from "./getScrollbarStyle";
@@ -213,29 +213,72 @@ export function getActionButtonStyles(vsColors:VsColors){
     ]
   }
 
+const getFontStyle = (fontFamily:string,fontSize:number) : IRawStyle => {
+  if(fontFamily.indexOf(" ")!== -1){
+    fontFamily = `'${fontFamily}'`;
+  }
+  return {
+    fontFamily: fontFamily,
+    MozOsxFontSmoothing: 'grayscale',
+    WebkitFontSmoothing: 'antialiased',
+    fontSize: `${fontSize}px`,
+    fontWeight: 400,
+  };
+
+}
+
+
 export class VsCustomizerContext implements ICustomizerContext {
   constructor(
     private vsColors:VsColors,
     private rowBackgroundFromTreeViewColors:boolean,
     private rowTextFromTreeViewColors:boolean,
-    private headerColorsForHeaderText:boolean
+    private headerColorsForHeaderText:boolean,
+    private surroundTabs:boolean,
+    private fontSize:number,
+    private fontName:string
     ){
+      const consistentFontSize = getFontStyle(fontName,fontSize);
+      this.customizations.settings.theme = createTheme({
+        fonts:{
+          large:consistentFontSize,
+          medium:consistentFontSize,
+          mediumPlus:consistentFontSize,
+          mega:consistentFontSize,
+          small:consistentFontSize,
+          smallPlus:consistentFontSize
+        }
+      })
   }
 
   getNext(
     vsColors:VsColors,
     rowBackgroundFromTreeViewColors:boolean,
     rowTextFromTreeViewColors:boolean,
-    headerColorsForHeaderText:boolean  
+    headerColorsForHeaderText:boolean,
+    surroundTabs:boolean,
+    fontSize:number,
+    fontName:string  
   ){
     if(vsColors === this.vsColors && 
       rowBackgroundFromTreeViewColors === this.rowBackgroundFromTreeViewColors &&
       rowTextFromTreeViewColors === this.rowTextFromTreeViewColors &&
-      headerColorsForHeaderText === this.headerColorsForHeaderText
+      headerColorsForHeaderText === this.headerColorsForHeaderText &&
+      surroundTabs === this.surroundTabs &&
+      fontSize === this.fontSize &&
+      fontName === this.fontName
+
     ){
       return this;
     }
-    return new VsCustomizerContext(vsColors, rowBackgroundFromTreeViewColors, rowTextFromTreeViewColors,headerColorsForHeaderText);
+    return new VsCustomizerContext(
+      vsColors, 
+      rowBackgroundFromTreeViewColors, 
+      rowTextFromTreeViewColors,
+      headerColorsForHeaderText,
+      surroundTabs, 
+      fontSize,
+      fontName);
   }
 
   customizations: ICustomizations = {
@@ -451,20 +494,14 @@ export class VsCustomizerContext implements ICustomizerContext {
       },
       "Pivot":{
         styles:(props:IPivotStyleProps) => {
+          const {linkFormat} = props;
+          
           const {EnvironmentColors:environmentColors, CommonControlsColors, TreeViewColors} = this.vsColors;
-          return {
+
+          return linkFormat === "links" ? {
             link:[
                 {
-                    //color:commonControlsColors.InnerTabInactiveText,
-                    // might only supply if rootIsTabs - if not tabs use a link color instead 
-                    //border:`1px solid ${commonControlsColors.InnerTabInactiveBorder}`,
-                    //backgroundColor: commonControlsColors.InnerTabInactiveBackground,
-
-                    // does not work
-                    //color:environmentColors.ToolWindowTabText,
-                    //backgroundColor:environmentColors.ToolWindowTabGradientEnd,
-
-                    color:environmentColors.ToolWindowText, //environmentColors.PanelHyperlink,
+                    color:environmentColors.ToolWindowText,
                     backgroundColor:environmentColors.ToolWindowBackground,
                     selectors: {
                         [`.${IsFocusVisibleClassName} &:focus`]: {
@@ -472,21 +509,11 @@ export class VsCustomizerContext implements ICustomizerContext {
                         },
                         
                         ':hover': {
-                            //backgroundColor: commonControlsColors.InnerTabInactiveHoverBackground,
-                            //color: commonControlsColors.InnerTabInactiveHoverText,
-                            // might only supply if rootIsTabs
-                            //border:`1px solid ${commonControlsColors.InnerTabInactiveHoverBorder}`,
-                            
-                            color: environmentColors.ToolWindowText,// environmentColors.PanelHyperlinkHover,
+                            color: environmentColors.ToolWindowText,
                             backgroundColor:environmentColors.ToolWindowBackground
                         },
                         ':active': {
-                            //backgroundColor: commonControlsColors.InnerTabActiveBackground,
-                            //color: commonControlsColors.InnerTabActiveText,
-                            // might only supply if rootIsTabs
-                            //border:`1px solid ${commonControlsColors.InnerTabActiveBorder}`,
-                            
-                            //color: environmentColors.PanelHyperlinkPressed,
+                            color: environmentColors.ToolWindowText,
                             backgroundColor:environmentColors.ToolWindowBackground
                         },
         
@@ -497,14 +524,79 @@ export class VsCustomizerContext implements ICustomizerContext {
             ],
             linkIsSelected:[
                 {
-                    selectors: {
+                    selectors: { // This is the underline
                         ':before': {
                             //TreeView.SelectedItemInactive commonControlsColors.InnerTabActiveBorder, 
-                            backgroundColor: TreeViewColors.SelectedItemInactiveText, 
+
+                            // vs seems to use ToolWindowBackground for environmentColors.ToolWindowTabSelectedTab
+                            // alone against the ToolWindowBackground this is not that clear or cannot be seen at all
+                            //CommonControlsColors.InnerTabActiveBackground 
+
+                            // legible in all - TreeViewColors.SelectedItemInactiveText
+                            backgroundColor: environmentColors.ToolWindowText, // of course this works against ToolWindowBackground
                         },
                     }
                 }
             ],
+          } : {
+            root:[this.surroundTabs && {
+              paddingTop:'5px',
+              paddingLeft:'5px',
+              paddingRight:'5px',
+              backgroundColor:environmentColors.EnvironmentBackground,
+              display:'inline-block'
+            }],
+            link:[
+              {
+                  color:environmentColors.ToolWindowTabText,
+                  backgroundColor:environmentColors.ToolWindowTabGradientBegin,
+                  border:`1px solid ${environmentColors.ToolWindowTabBorder}`,
+                  selectors: {
+                      [`.${IsFocusVisibleClassName} &:focus`]: {
+                        outline: `1px solid ${CommonControlsColors.FocusVisualText}`,
+                      },
+                      
+                      ':hover': {
+                          color: environmentColors.ToolWindowTabMouseOverText,
+                          backgroundColor:environmentColors.ToolWindowTabMouseOverBackgroundBegin,
+                          border:`1px solid ${environmentColors.ToolWindowTabMouseOverBorder}`,
+                      },
+                      ':active': {
+                        color: environmentColors.ToolWindowTabMouseOverText,
+                          backgroundColor:environmentColors.ToolWindowTabMouseOverBackgroundBegin
+                      },
+      
+
+                  }
+
+              },
+          ],
+          linkIsSelected:[
+              {
+                selectors: {
+                  [`&.is-selected`]:{
+                    color:environmentColors.ToolWindowTabSelectedText,
+                    backgroundColor:environmentColors.ToolWindowTabSelectedTab,
+                    borderTop:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                    borderLeft:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                    borderRight:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                    borderBottom:`0px solid`,
+                    ':hover': {
+                        color: environmentColors.ToolWindowTabSelectedText,
+                        backgroundColor:environmentColors.ToolWindowTabSelectedTab,
+                        borderTop:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                        borderLeft:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                        borderRight:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
+                        borderBottom:`0px solid`,
+                    },
+                    ':active': {
+                      color: environmentColors.ToolWindowTabSelectedActiveText,
+                    },
+    
+                  }
+                }
+              }
+          ],
           }
         }
       },
@@ -968,7 +1060,7 @@ export class VsCustomizerContext implements ICustomizerContext {
      
     },
     settings:{
-
+     
     },
   }
   
