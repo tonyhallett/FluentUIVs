@@ -83,7 +83,7 @@ export function App() {
     const [rowBackgroundFromTreeViewColors,{toggle:toggleRowBackgroundFromTreeViewColors}] = useBoolean(true);
     const [rowTextFromTreeViewColors,{toggle:toggleRowTextFromTreeViewColors}] = useBoolean(false);
     const [headerColorsForHeaderText,{toggle:toggleHeaderColorsForHeaderText}] = useBoolean(false);
-    const [fontSize, setFontSize] = useState(10);
+    const [fontSize, setFontSize] = useState(8);
 
     
     const customizationStyling = useRefInitOnce(new VsCustomizerContext(
@@ -213,7 +213,7 @@ export function App() {
                       }
                     }
                   } label="surround tabs"  checked={surroundTabs} onChange={toggleSurroundTabs}/>
-                  <Slider showValue value={fontSize} min={10} max={19} onChange={num => setFontSize(num)} />
+                  <Slider showValue value={fontSize} min={8} max={19} onChange={num => setFontSize(num)} />
                 </div>
     
         </Modal>

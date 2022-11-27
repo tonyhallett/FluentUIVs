@@ -1,4 +1,6 @@
-export const installedFonts = ['Font Awesome 5 Free',
+export const installedFonts = [
+'Segoe UI',    
+'Font Awesome 5 Free',
 'hello honey - Personal Use',
 'Birthstone',
 'Qwigley',
@@ -65,7 +67,7 @@ export const installedFonts = ['Font Awesome 5 Free',
 'Segoe MDL2 Assets',
 'Segoe Print',
 'Segoe Script',
-'Segoe UI',
+
 'Segoe UI Emoji',
 'Segoe UI Historic',
 'Segoe UI Symbol',

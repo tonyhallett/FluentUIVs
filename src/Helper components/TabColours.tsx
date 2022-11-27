@@ -14,7 +14,7 @@ export function TabColours(props:{vsColors:VsColors}){
     const tabColourGroupings:TabColourGrouping[] = [
         {
             text:EnvironmentColors.ToolWindowTabText,
-            background:EnvironmentColors.ToolWindowTabGradientEnd,
+            background:EnvironmentColors.ToolWindowTabGradientBegin,
             border:EnvironmentColors.ToolWindowTabBorder,
             description:"ToolWindowTab defaults state"
         },

@@ -1,8 +1,9 @@
-import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsRowStyleProps, IDropdownStyleProps, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps, ZIndexes } from "@fluentui/react";
+import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsHeaderStyles, IDetailsRowStyleProps, IDropdownStyleProps, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps, ZIndexes } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 import { getScrollbarStyle } from "./getScrollbarStyle";
-import { colorRGBA, getColor, lightenOrDarken } from "../utilities/colorHelpers";
+import { colorRGBA, getColor, lightenOrDarken } from "./colorHelpers";
+import { DeepPartial } from "@fluentui/merge-styles";
 
 export const buttonHighContrastFocus = {
     left: -2,
@@ -226,6 +227,7 @@ const getFontStyle = (fontFamily:string,fontSize:number) : IRawStyle => {
   };
 
 }
+
 
 
 export class VsCustomizerContext implements ICustomizerContext {
@@ -533,7 +535,7 @@ export class VsCustomizerContext implements ICustomizerContext {
                             //CommonControlsColors.InnerTabActiveBackground 
 
                             // legible in all - TreeViewColors.SelectedItemInactiveText
-                            backgroundColor: environmentColors.ToolWindowText, // of course this works against ToolWindowBackground
+                            backgroundColor: environmentColors.ToolWindowTabSelectedText,//environmentColors.ToolWindowText, // of course this works against ToolWindowBackground
                         },
                     }
                 }
@@ -575,12 +577,15 @@ export class VsCustomizerContext implements ICustomizerContext {
               {
                 selectors: {
                   [`&.is-selected`]:{
+
                     color:environmentColors.ToolWindowTabSelectedText,
                     backgroundColor:environmentColors.ToolWindowTabSelectedTab,
                     borderTop:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
                     borderLeft:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
                     borderRight:`1px solid ${environmentColors.ToolWindowTabSelectedBorder}`,
                     borderBottom:`0px solid`,
+                    
+
                     ':hover': {
                         color: environmentColors.ToolWindowTabSelectedText,
                         backgroundColor:environmentColors.ToolWindowTabSelectedTab,
@@ -811,8 +816,8 @@ export class VsCustomizerContext implements ICustomizerContext {
         }
       },
       "DetailsHeader" : {
-        styles:(props:IDetailsHeaderStyleProps) => {
-          const {HeaderColors} = this.vsColors;
+        styles:(props:IDetailsHeaderStyleProps):DeepPartial<IDetailsHeaderStyles> => {
+          const {HeaderColors, EnvironmentColors} = this.vsColors;
           const focusStyle = getVsFocusStyle(this.vsColors);
           return {
             root:{
@@ -840,7 +845,28 @@ export class VsCustomizerContext implements ICustomizerContext {
                   },
                 },
 
-            }]
+            }],
+            cellSizer: [
+              {
+                selectors: {
+                  ':after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    background: this.headerColorsForHeaderText ? HeaderColors.MouseOverText : EnvironmentColors.CommandBarDragHandle,
+                    opacity: 0,
+                    left: '50%',
+                  },
+                  [`&.is-resizing:after`]: [
+                    {
+                      boxShadow: `0 0 5px 0 ${EnvironmentColors.CommandBarDragHandleShadow}`,
+                    },
+                  ],
+                },
+              },
+],
         }
       }
     },
@@ -934,34 +960,14 @@ export class VsCustomizerContext implements ICustomizerContext {
             
             },focusStyle
           ],
-          cellSizer: [
-            {
-              selectors: {
-                ':after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  width: 1,
-                  background: HeaderColors.MouseOver,
-                  opacity: 0,
-                  left: '50%',
-                },
-                // could change the boxShadow
-                /* [`&.${classNames.isResizing}:after`]: [
-                  cellSizerFadeInStyles,
-                  {
-                    boxShadow: '0 0 5px 0 rgba(0, 0, 0, 0.4)',
-                  },
-                ], */
-              },
-            },
-          ],
+          //cellSizer here
+          
         }
       }
      },
      "DetailsRow" : {
-      styles:(detailsRowStyleProps:IDetailsRowStyleProps) => {        const { TreeViewColors, EnvironmentColors} = this.vsColors;
+      styles:(detailsRowStyleProps:IDetailsRowStyleProps) => {        
+        const { TreeViewColors, EnvironmentColors} = this.vsColors;
         const focusStyle = getVsFocusStyle(this.vsColors);
         const rowBackground = this.rowBackgroundFromTreeViewColors ? TreeViewColors.Background : "transparent"
         const rowTextColor = this.rowTextFromTreeViewColors ? TreeViewColors.BackgroundText : EnvironmentColors.CommandBarTextActive;
