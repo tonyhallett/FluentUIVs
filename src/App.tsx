@@ -1,7 +1,7 @@
 //import React from 'react';
 // In React 17 you no longer need to import react when writing JSX
 
-import { Checkbox, ContextualMenu, CustomizerContext, IDragOptions, IPivotProps, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons, Slider,  } from "@fluentui/react";
+import { Checkbox, classNamesFunction, ContextualMenu, CustomizerContext, HighContrastSelector, IDragOptions, IPivotProps, IStyle, IStyleFunctionOrObject, ITheme, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons, Slider, styled,  } from "@fluentui/react";
 import { useState } from "react";
 import { vsThemes} from "./vs styling/themeColors";
 import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
@@ -21,6 +21,8 @@ import { useCycle } from "./utilities/hooks/useCycle";
 import { useRefInitOnce } from "./utilities/hooks/useRefInitOnce";
 import { TabColours } from "./Helper components/TabColours";
 import { installedFonts } from "./vs styling/installedFonts";
+import React from "react";
+import { getClassNames } from "@fluentui/react/lib/components/ComboBox/ComboBox.classNames";
 
 //https://github.com/microsoft/fluentui/issues/22895
 export const VisualStudioIDELogo32Icon =  createSvgIcon({
@@ -240,3 +242,57 @@ export function App() {
       </>
     </CustomizerContext.Provider>)
 }
+export function App2(){
+  return <StyledComponent styles={{
+    root:{
+      color:false,
+      [HighContrastSelector]:false
+    } as any,
+
+  }}/>
+}
+
+const baseGetClassNames = classNamesFunction<IBaseStyleProps, IBaseComponentStyles>();
+
+export class BaseComponent extends React.Component<IBaseComponentProps, {}> {
+  render(): React.ReactNode {
+    const classNames = baseGetClassNames(this.props.styles,{});
+    return <div className={classNames.root}>Styled div</div>
+  }
+}
+
+export interface IBaseComponentStyles {
+  root: IStyle;
+}
+
+export interface IBaseComponentProps{
+    /**
+   * Theme provided by styled() function
+   */
+     theme?: ITheme;
+
+     /**
+      * Overriding styles to this row
+      */
+     styles?: IStyleFunctionOrObject<IBaseStyleProps, IBaseComponentStyles>;
+}
+export interface IBaseStyleProps{}
+
+export const StyledComponent: React.FunctionComponent<IBaseComponentProps> = styled<
+{},
+IBaseStyleProps,
+IBaseComponentStyles
+>(BaseComponent, (styleProps => {
+  return {
+    root:{
+      color:"red",
+      background:"cyan",
+      [HighContrastSelector]:{
+        border:"1px solid black",
+        forcedColorAdjust:'none'
+      }
+    },
+  }
+}), undefined, {
+scope: 'DetailsRow',
+});
