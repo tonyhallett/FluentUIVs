@@ -13,6 +13,10 @@ export function ControlsDemo(props:{}){
         {
           key:"ddo2",
           text:"Second"
+        },
+        {
+          key:"ddo3",
+          text:"Third"
         }
       ];
     
@@ -23,8 +27,13 @@ export function ControlsDemo(props:{}){
         }}/>
         <MyActionButton disabled={buttonDisabled} iconProps={{iconName:"github"}}>Some text</MyActionButton>
         <MyActionButton iconProps={{iconName:"logRemove"}}/>
-        <Dropdown selectedKey={selectedDropDownOption?.key} label="Drop me" placeholder="Placeholder" options={dropDownOptions} onChange={(_,option) => {
-        setSelectedDropDownOptions(option)
-      }} />
+        <Dropdown 
+          selectedKey={selectedDropDownOption?.key} 
+          /*label="Drop me" */
+          placeholder="Placeholder" 
+          options={dropDownOptions} 
+          onChange={(_,option) => {
+            setSelectedDropDownOptions(option)
+          }} />
     </div>
 }

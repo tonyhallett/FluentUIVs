@@ -80,6 +80,7 @@ export function App() {
     const [useHyperlink,{toggle:toggleUseHyperlink}] = useBoolean(false);
     const [addScrollbars, {toggle:toggleAddScrollbars}] = useBoolean(false);
     const [useLinksFormat, {toggle:toggleLinkFormat}] = useBoolean(true);
+    const [themeIsHighContrast, {toggle:toggleThemeIsHighContrast}] = useBoolean(false);
 
     const [surroundTabs, {toggle:toggleSurroundTabs}] = useBoolean(false);
     const [rowBackgroundFromTreeViewColors,{toggle:toggleRowBackgroundFromTreeViewColors}] = useBoolean(true);
@@ -95,7 +96,8 @@ export function App() {
       headerColorsForHeaderText,
       surroundTabs,
       fontSize,
-      installedFonts[selectedFontIndex]
+      installedFonts[selectedFontIndex],
+      themeIsHighContrast
       ))
     
     const selectedTheme = vsThemes[selectedThemeIndex];
@@ -107,7 +109,8 @@ export function App() {
       headerColorsForHeaderText,
       surroundTabs,
       fontSize,
-      installedFonts[selectedFontIndex]
+      installedFonts[selectedFontIndex],
+      themeIsHighContrast
       );
 
     useBodyToolWindow(getBodyStyles(selectedThemeColors));
@@ -216,6 +219,7 @@ export function App() {
                     }
                   } label="surround tabs"  checked={surroundTabs} onChange={toggleSurroundTabs}/>
                   <Slider showValue value={fontSize} min={8} max={19} onChange={num => setFontSize(num)} />
+                  <Checkbox label="theme high contrast ?"  checked={themeIsHighContrast} onChange={toggleThemeIsHighContrast}/>
                 </div>
     
         </Modal>

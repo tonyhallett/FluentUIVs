@@ -1,0 +1,2 @@
+The classNameFunction caches combinations of style prop values such that the style function will not be called 
+again for the same style props values.  ( This caching also includes the __cachedInputs__ from the styled wrapper )
