@@ -248,7 +248,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
     return <div>
       {contextMenu}
       <Stack horizontal horizontalAlign='space-between' verticalAlign='center'>
-      <Slider showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
+      <Slider styles={{root:{width:200}}} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
               return "The value";
           }}/>
       <SearchBox clearButtonProps={{
