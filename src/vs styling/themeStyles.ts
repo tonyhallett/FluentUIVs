@@ -971,19 +971,21 @@ export class VsCustomizerContext implements ICustomizerContext {
             progressBar: [{
               backgroundColor,
               color: "transparent"
-            },/* themeNotHighContrast && {
+            },
+            themeNotHighContrast && {
               [HighContrastSelector]:{
                 backgroundColor:false
               }
-            } */],
+            }],
             progressTrack: [{
               backgroundColor: "transparent",
-              color: "transparent"
-            }/* ,themeNotHighContrast && {
-              [HighContrastSelector]:{
-                borderBottom:false
+              color: "transparent",
+              selectors:{
+                [HighContrastSelector] : {
+                  borderBottom: "0px solid transparent" 
+                }
               }
-            } */],
+            }],
             root: {
               color: "transparent"
             },
