@@ -46278,10 +46278,10 @@ const comboTheme = {
     ComboBoxBackgroundHover : 'rgba(61,61,61,1)',
     ComboBoxBackgroundPressed : 'rgba(31,31,31,1)',
 
-    ComboBoxBorder : 'rgba(66,66,66,1)',
-    ComboBoxBorderFocused : 'rgba(153,153,153,1)',
-    ComboBoxBorderHover : 'rgba(66,66,66,1)',
-    ComboBoxBorderPressed : 'rgba(153,153,153,1)',
+    ComboBoxBorder : 'yellow',
+    ComboBoxBorderFocused : 'red',
+    ComboBoxBorderHover : 'pink',
+    ComboBoxBorderPressed : 'green',
 
     ComboBoxText : 'rgba(250,250,250,1)',
     ComboBoxTextFocused : 'rgba(250,250,250,1)',
@@ -46294,9 +46294,9 @@ const comboTheme = {
     ComboBoxSeparatorHover : 'orange',
     ComboBoxSeparatorPressed : 'white',
     
-    ComboBoxGlyphBackground : 'cyan',
-    ComboBoxGlyphBackgroundFocused : 'cyan',
-    ComboBoxGlyphBackgroundHover : 'blue',
+    ComboBoxGlyphBackground : 'yellow',
+    ComboBoxGlyphBackgroundFocused : 'red',
+    ComboBoxGlyphBackgroundHover : 'pink',
     ComboBoxGlyphBackgroundPressed : 'green',
     ComboBoxGlyph : 'red',
     ComboBoxGlyphFocused : 'red',

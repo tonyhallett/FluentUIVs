@@ -2,14 +2,16 @@ import { Checkbox, Dropdown, IDropdownOption, Link } from "@fluentui/react";
 import { useState } from "react";
 import { MyActionButton } from "./vs styling/MyActionButton";
 
+const initialSelectedOption:IDropdownOption = {
+  key:"ddo1",
+  text:"First"
+}
+
 export function ControlsDemo(props:{}){
     const [buttonDisabled,setButtonDisabled] = useState(true);
-    const [selectedDropDownOption, setSelectedDropDownOptions] = useState<IDropdownOption>();
+    const [selectedDropDownOption, setSelectedDropDownOptions] = useState<IDropdownOption>(initialSelectedOption);
     const dropDownOptions: IDropdownOption[] = [
-        {
-          key:"ddo1",
-          text:"First"
-        },
+        initialSelectedOption,
         {
           key:"ddo2",
           text:"Second"
@@ -27,13 +29,20 @@ export function ControlsDemo(props:{}){
         }}/>
         <MyActionButton disabled={buttonDisabled} iconProps={{iconName:"github"}}>Some text</MyActionButton>
         <MyActionButton iconProps={{iconName:"logRemove"}}/>
-        <Dropdown 
+        <Dropdown
+          styles={
+            {
+              root:{
+                width:"200px"
+              }
+            }
+          } 
           selectedKey={selectedDropDownOption?.key} 
           /*label="Drop me" */
-          placeholder="Placeholder" 
+          //placeholder="Placeholder" 
           options={dropDownOptions} 
           onChange={(_,option) => {
-            setSelectedDropDownOptions(option)
+            setSelectedDropDownOptions(option!)
           }} />
     </div>
 }

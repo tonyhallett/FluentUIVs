@@ -70,7 +70,26 @@ registerIcons({
     dragHandleSelector: '.ms-Modal-scrollableContent > div:first-child',
 };
 
-
+export const addVsHighContrastBlocker = (isHighContrastTheme:boolean) => {
+  const id = "vsHighContrast";
+  const previousStyle = document.getElementById(id);
+  if(previousStyle){
+    previousStyle.remove();
+  }
+  if(!isHighContrastTheme){
+    const style = document.createElement("style");
+    style.id = id;
+    style.textContent = `
+    @media (forced-colors: active) {
+      * {
+        forced-color-adjust: none;
+      }
+    }
+    `;
+  document.head.append(style);
+  }
+  
+}
 
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
@@ -99,6 +118,9 @@ export function App() {
       installedFonts[selectedFontIndex],
       themeIsHighContrast
       ))
+    
+
+      addVsHighContrastBlocker(themeIsHighContrast);
     
     const selectedTheme = vsThemes[selectedThemeIndex];
     const selectedThemeColors = selectedTheme[1];
