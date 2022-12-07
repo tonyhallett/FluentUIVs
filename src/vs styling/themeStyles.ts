@@ -970,7 +970,7 @@ export class VsCustomizerContext implements ICustomizerContext {
           return {
             progressBar: [{
               backgroundColor,
-              color: "transparent"
+              color: "transparent",
             },
             themeNotHighContrast && {
               [HighContrastSelector]:{

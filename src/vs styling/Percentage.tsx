@@ -10,6 +10,9 @@ export interface IPercentageProps{
 export class Percentage extends React.Component<{percentage:number | null,styles:IProgressIndicatorProps['styles']}, {}> {
   public render(): JSX.Element {
     const {percentage, styles} = this.props;
+    if(percentage === null){
+      return <></>;
+    }
     return <ProgressIndicator  barHeight={5} percentComplete={percentage === null ? 1 : percentage / 100} styles={styles} />;
   }
   
