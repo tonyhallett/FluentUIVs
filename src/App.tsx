@@ -2,7 +2,7 @@
 // In React 17 you no longer need to import react when writing JSX
 
 import { Checkbox, classNamesFunction, ContextualMenu, CustomizerContext, HighContrastSelector, IDragOptions, IPivotProps, IStyle, IStyleFunctionOrObject, ITheme, Label, Modal, Pivot, PivotItem, ProgressIndicator, registerIcons, Slider, styled,  } from "@fluentui/react";
-import { useState } from "react";
+import { CSSProperties, SVGAttributes, useState } from "react";
 import { vsThemes} from "./vs styling/themeColors";
 import{ BeerMugIcon, CheckMarkIcon, ChevronDownIcon, ChevronRightMedIcon, ClearFilterIcon, createSvgIcon, ErrorBadgeIcon, FilterIcon, GitHubLogoIcon,  GroupedDescendingIcon, InfoIcon, LogRemoveIcon, MoreIcon, NextIcon, OpenPaneIcon, PreviousIcon, ReviewSolidIcon, SortDownIcon, SortUpIcon, TagIcon } from'@fluentui/react-icons-mdl2';
 import { LogDemo } from "./LogDemo";
@@ -12,7 +12,7 @@ import { useBodyToolWindow } from "./utilities/useBody";
 import { FeedbackDemo } from "./FeedbackDemo";
 
 import { ControlsDemo } from "./ControlDemo";
-import { getBodyStyles, VsCustomizerContext,} from "./vs styling/themeStyles";
+import { addScrollBarStyles, getBodyStyles, VsCustomizerContext,} from "./vs styling/themeStyles";
 import { SimpleTableDemo } from "./SimpleTableDemo";
 import { Long, Wide } from "./Helper components/LongAndWide";
 import { MyActionButton } from "./vs styling/MyActionButton";
@@ -91,6 +91,9 @@ export const addVsHighContrastBlocker = (isHighContrastTheme:boolean) => {
   
 }
 
+
+
+
 export function App() {
     const [selectedTabKey, setSelectedTabKey] = useState("0");
     const [selectedThemeIndex,nextTheme, previousTheme] = useCycle(vsThemes)
@@ -107,7 +110,7 @@ export function App() {
     const [headerColorsForHeaderText,{toggle:toggleHeaderColorsForHeaderText}] = useBoolean(false);
     const [fontSize, setFontSize] = useState(8);
 
-    
+    addScrollBarStyles(vsThemes[selectedThemeIndex][1],themeIsHighContrast);
     const customizationStyling = useRefInitOnce(new VsCustomizerContext(
       vsThemes[selectedThemeIndex][1],
       rowBackgroundFromTreeViewColors,
