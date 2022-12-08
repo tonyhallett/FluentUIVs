@@ -759,26 +759,38 @@ export class VsCustomizerContext implements ICustomizerContext {
         }
       },
       "ProgressIndicator":{
-        styles:(props:IProgressIndicatorStyleProps) => {
+        styles:(progressIndicatorStyleProps:IProgressIndicatorStyleProps):DeepPartial<IProgressIndicatorStyles> => {
           const {ProgressBarColors : progressBarColors, EnvironmentColors:environmentColors} = this.vsColors;
-          const trackColor = progressBarColors.Background;//environmentColors.ToolWindowText
+          const trackColor = progressBarColors.Background;
           const progressBarColor = progressBarColors.IndicatorFill !== trackColor ? progressBarColors.IndicatorFill : environmentColors.ToolWindowText;
+          const themeNotHighContrast = !this.themeIsHighContrast;
+          
           return {
-              progressTrack:{
-                  //can barely see this with blue, cannot see with light or dark
+              progressTrack:[{
                   backgroundColor : trackColor,
-                  //border:`1px solid ${environmentColors.ToolWindowText}`
-              },
-              // might use an accent color
+              },themeNotHighContrast && {
+                [HighContrastSelector]:{
+                  borderBottom:false
+                }
+              }],
               progressBar:[
-              {
-              },
-              props.indeterminate && {
-                  background:
-                  `linear-gradient(to right, ${progressBarColor} 0%, ` +
-                  `${progressBarColor} 50%, ${progressBarColor} 100%)`,
-                  //border:`1px solid ${environmentColors.ToolWindowText}`
-              }
+                themeNotHighContrast && {
+                  [HighContrastSelector]:{
+                    backgroundColor:false
+                  }
+                },
+                progressIndicatorStyleProps.indeterminate && {
+                    background:
+                    `linear-gradient(to right, ${progressBarColor} 0%, ` +
+                    `${progressBarColor} 50%, ${progressBarColor} 100%)`,
+                    selectors:{
+                      ...(themeNotHighContrast ? {
+                        [HighContrastSelector]:{
+                          background:false as any
+                        }
+                      } : {}),
+                    }
+                }
               ]
           }
         }
