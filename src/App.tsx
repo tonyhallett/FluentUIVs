@@ -110,7 +110,7 @@ export function App() {
     const [headerColorsForHeaderText,{toggle:toggleHeaderColorsForHeaderText}] = useBoolean(false);
     const [fontSize, setFontSize] = useState(8);
 
-    addScrollBarStyles(vsThemes[selectedThemeIndex][1],themeIsHighContrast);
+    addScrollBarStyles(vsThemes[selectedThemeIndex][1]);
     const customizationStyling = useRefInitOnce(new VsCustomizerContext(
       vsThemes[selectedThemeIndex][1],
       rowBackgroundFromTreeViewColors,

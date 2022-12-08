@@ -7,13 +7,13 @@ export interface IPercentageProps{
 }
 
 @customizable('Percentage', ['theme', 'styles'], true)
-export class Percentage extends React.Component<{percentage:number | null,styles:IProgressIndicatorProps['styles']}, {}> {
+export class Percentage extends React.Component<{percentage:number | null,styles:IProgressIndicatorProps['styles'],className:string|undefined}, {}> {
   public render(): JSX.Element {
     const {percentage, styles} = this.props;
     if(percentage === null){
       return <></>;
     }
-    return <ProgressIndicator  barHeight={5} percentComplete={percentage === null ? 1 : percentage / 100} styles={styles} />;
+    return <ProgressIndicator className={this.props.className}  barHeight={5} percentComplete={percentage === null ? 1 : percentage / 100} styles={styles} />;
   }
   
 }

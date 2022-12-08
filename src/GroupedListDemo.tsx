@@ -184,7 +184,7 @@ const columns:IDemoColumn[] = [
     flexGrow:1,
     
     onRenderWithOptions(useLink,item:IDemoItem){
-      return <Percentage percentage={item.percentage} styles={{root: {
+      return <Percentage className="cellTextBg"  percentage={item.percentage} styles={{root: {
         width: '100px'}}}/>
     }
   }

@@ -260,17 +260,19 @@ function getScrollbarStyle(
   }
 
 
-  return [{
+  return {
     "::-webkit-scrollbar": {
       width: `${scrollbarSize}px`,
       height: `${scrollbarSize}px`,
     },
     "::-webkit-scrollbar-corner": {
+      forcedColorAdjust:"none",
       backgroundColor: trackColor,
       ...getBorder(scrollBarBorderColor)
     },
     // the track (progress bar) of the scrollbar, where there is a gray bar on top of a white bar
     "::-webkit-scrollbar-track": {
+      forcedColorAdjust:"none",
       backgroundColor: trackColor,
       ...getBorder(scrollBarBorderColor)
     },
@@ -278,6 +280,7 @@ function getScrollbarStyle(
 
     // what press to slide
     "::-webkit-scrollbar-thumb": {
+      forcedColorAdjust:"none",
       backgroundColor: thumbColor, // necessary even when styling differently
     },
     "::-webkit-scrollbar-thumb:vertical": {
@@ -303,6 +306,7 @@ function getScrollbarStyle(
 
     //the buttons on the scrollbar (arrows pointing upwards and downwards that scroll one line at a time
     "::-webkit-scrollbar-button:single-button": {
+      forcedColorAdjust:"none",
       height:`${scrollbarSize}px`,
       width:`${scrollbarSize}px`,
       backgroundColor: arrowBackgroundColor,
@@ -329,8 +333,7 @@ function getScrollbarStyle(
     /* "::-webkit-scrollbar-corner":{
         backgroundColor:"purple"
     } */
-  },{
-  }];
+  };
 }
 
 
@@ -357,7 +360,7 @@ const getVsScrollbarStyle = (vsColors:VsColors) => {
   );
 }
 
-export const addScrollBarStyles = (vsColors:VsColors, themeIsHighContrast:boolean) => {
+export const addScrollBarStyles = (vsColors:VsColors) => {
   const id = "scrollbarStyles";
   const previousStyle = document.getElementById(id);
   if(previousStyle){
@@ -365,7 +368,7 @@ export const addScrollBarStyles = (vsColors:VsColors, themeIsHighContrast:boolea
   }
   const style = document.createElement("style");
   style.id = id;
-  const [scrollBarStyle,highContrastStyle] = getVsScrollbarStyle(vsColors);
+  const scrollBarStyle = getVsScrollbarStyle(vsColors);
 
   let styleHTML = "";
 
@@ -373,15 +376,6 @@ export const addScrollBarStyles = (vsColors:VsColors, themeIsHighContrast:boolea
     styleHTML += `${key}{ ${reactToCSS(value)}}`
   }
   
-  if(themeIsHighContrast){
-    for(const [key,value] of Object.entries(highContrastStyle)){
-      styleHTML += `
-      ${HighContrastSelector} {
-        ${key}{ ${reactToCSS(value)}}
-      }
-      `
-    }
-  }
   style.innerHTML = styleHTML;
   document.head.append(style);
 }
@@ -1359,6 +1353,7 @@ export class VsCustomizerContext implements ICustomizerContext {
         const rowBackground = this.rowBackgroundFromTreeViewColors ? TreeViewColors.Background : "transparent"
         const rowTextColor = this.rowTextFromTreeViewColors ? TreeViewColors.BackgroundText : EnvironmentColors.CommandBarTextActive;
         const {isSelected} = detailsRowStyleProps;
+        const progressBarClass = "ms-ProgressIndicator-progressBar";
         return {
           root: [
             {
@@ -1366,6 +1361,9 @@ export class VsCustomizerContext implements ICustomizerContext {
               borderBottom:"none",
               color: rowTextColor,// environmentColors.CommandBarTextActive,
               selectors: {
+                [`.${progressBarClass}`]:{
+                  backgroundColor:rowTextColor
+                },
                 "&:hover":{
                   background:rowBackground,//treeViewColors.Background, // mirroring vs, docs say "transparent",
                   color:rowTextColor,// environmentColors.CommandBarTextActive,
@@ -1386,6 +1384,9 @@ export class VsCustomizerContext implements ICustomizerContext {
               background: TreeViewColors.SelectedItemInactive,
               borderBottom: "none",
               selectors: {
+                [`.${progressBarClass}`]:{
+                  backgroundColor:TreeViewColors.SelectedItemInactiveText
+                },
                 ['.ms-DetailsRow-cell button.ms-Link']:{
                   color:TreeViewColors.SelectedItemInactiveText
                 },
@@ -1411,6 +1412,9 @@ export class VsCustomizerContext implements ICustomizerContext {
                   color: TreeViewColors.SelectedItemActiveText,
                   background: TreeViewColors.SelectedItemActive,
                   selectors: {
+                    [`.${progressBarClass}`]:{
+                      backgroundColor:TreeViewColors.SelectedItemActiveText
+                    },
                     [`.ms-DetailsRow-cell`]: {
                       color: TreeViewColors.SelectedItemActiveText,
                       background: TreeViewColors.SelectedItemActive,
@@ -1435,6 +1439,9 @@ export class VsCustomizerContext implements ICustomizerContext {
                 '&:focus-within':{
                   color: TreeViewColors.SelectedItemActiveText,
                   background: TreeViewColors.SelectedItemActive,
+                  [`.${progressBarClass}`]:{
+                    backgroundColor:TreeViewColors.SelectedItemActiveText
+                  },
                 }
                 
               },
