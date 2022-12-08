@@ -1,4 +1,4 @@
-import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsHeaderStyles, IDetailsRowStyleProps, IDropdownStyleProps, IDropdownStyles, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IPivotStyles, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, ISearchBoxStyles, IsFocusVisibleClassName, ISliderStyleProps, ISliderStyles, ZIndexes } from "@fluentui/react";
+import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsHeaderStyles, IDetailsRowStyleProps, IDetailsRowStyles, IDropdownStyleProps, IDropdownStyles, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IPivotStyles, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, ISearchBoxStyles, IsFocusVisibleClassName, ISliderStyleProps, ISliderStyles, ZIndexes } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 //import { getScrollbarStyle } from "./getScrollbarStyle";
@@ -1394,11 +1394,12 @@ export class VsCustomizerContext implements ICustomizerContext {
       }
      },
      "DetailsRow" : {
-      styles:(detailsRowStyleProps:IDetailsRowStyleProps) => {        
+      styles:(detailsRowStyleProps:IDetailsRowStyleProps):DeepPartial<IDetailsRowStyles> => {        
         const { TreeViewColors, EnvironmentColors} = this.vsColors;
         const focusStyle = getVsFocusStyle(this.vsColors);
         const rowBackground = this.rowBackgroundFromTreeViewColors ? TreeViewColors.Background : "transparent"
         const rowTextColor = this.rowTextFromTreeViewColors ? TreeViewColors.BackgroundText : EnvironmentColors.CommandBarTextActive;
+        const themeNotHighContrast = !this.themeIsHighContrast;
         const {isSelected} = detailsRowStyleProps;
         const progressBarClass = "ms-ProgressIndicator-progressBar";
         return {
@@ -1415,7 +1416,7 @@ export class VsCustomizerContext implements ICustomizerContext {
                   background:rowBackground,//treeViewColors.Background, // mirroring vs, docs say "transparent",
                   color:rowTextColor,// environmentColors.CommandBarTextActive,
                   selectors: {
-                    [`.ms-DetailsRow-cell > .ms-Link`]: {
+                    ['.ms-DetailsRow-cell > .ms-Link']: {
                       color: EnvironmentColors.PanelHyperlink,
                       textDecoration:"underline",
                       cursor:"pointer"
@@ -1425,8 +1426,9 @@ export class VsCustomizerContext implements ICustomizerContext {
                 }
               }
             },
-          
-            isSelected && {
+            isSelected && overrideHighContrast(themeNotHighContrast,"background", "color") as any,
+            isSelected &&               
+              {
               color:TreeViewColors.SelectedItemInactiveText,
               background: TreeViewColors.SelectedItemInactive,
               borderBottom: "none",
@@ -1449,28 +1451,63 @@ export class VsCustomizerContext implements ICustomizerContext {
                 },
         
                 // Selected State hover
-                '&:hover': {
-                  color: TreeViewColors.SelectedItemInactiveText,
-                  background: TreeViewColors.SelectedItemInactive,
-                },
+                '&:hover': [
+                  {
+                    color: TreeViewColors.SelectedItemInactiveText,
+                    background: TreeViewColors.SelectedItemInactive,
+                  },
+                  themeNotHighContrast && 
+                  {
+                    selectors: {
+                      [HighContrastSelector]: {
+                        background: false as any,
+                        selectors: {
+                          [`.ms-DetailsRow-cell`]: {
+                            color: false as any,
+                          },
+                          [`.ms-DetailsRow-cell > .ms-Link`]: {
+                            color: false as any,
+                          },
+                        },
+                      },
+                    }
+                  }
+                ],
         
                 // Focus state
-                '&:focus': {
+                '&:focus': [
+                  {
                   color: TreeViewColors.SelectedItemActiveText,
                   background: TreeViewColors.SelectedItemActive,
                   selectors: {
                     [`.${progressBarClass}`]:{
                       backgroundColor:TreeViewColors.SelectedItemActiveText
                     },
-                    [`.ms-DetailsRow-cell`]: {
-                      color: TreeViewColors.SelectedItemActiveText,
-                      background: TreeViewColors.SelectedItemActive,
-                    },
+                    [`.ms-DetailsRow-cell`]: [
+                      {
+                        color: TreeViewColors.SelectedItemActiveText,
+                        background: TreeViewColors.SelectedItemActive,
+                      }, 
+                      themeNotHighContrast && 
+                      {
+                        selectors:{
+                          [HighContrastSelector]: {
+                            color: false as any,
+                            selectors: {
+                              '> a': {
+                                color: false as any,
+                              },
+                            },
+                          },
+                      }
+                    }],
                     ['.ms-DetailsRow-cell button.ms-Link']:{
                       color:TreeViewColors.SelectedItemActiveText
                     },
                   },
                 },
+                overrideHighContrast(themeNotHighContrast,"background")
+              ],
         
                 // Focus and hover state
                 '&:focus:hover': {
@@ -1495,14 +1532,16 @@ export class VsCustomizerContext implements ICustomizerContext {
             },
             focusStyle,
           ],
-          // todo requires override ?
-          /* cell:{
-            selectors:{
-              "[data-is-focusable='true']":
-            }
-          } */
+          cell:[
+            {
+              selectors:{
+                "[data-is-focusable='true']":getFocusStyle(null as any,{ inset: -1, borderColor: "cyan", outlineColor: "pink" })
+              }
+            },
+            isSelected && overrideHighContrast(themeNotHighContrast,"background","color")
+          ]
         }
-        }
+      }
       }
      
     },
