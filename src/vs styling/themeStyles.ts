@@ -1,4 +1,4 @@
-import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsHeaderStyles, IDetailsRowStyleProps, IDropdownStyleProps, IDropdownStyles, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IPivotStyles, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, IsFocusVisibleClassName, ISliderStyleProps, ISliderStyles, ZIndexes } from "@fluentui/react";
+import { createTheme, FontClassNames, getFocusStyle, getInputFocusStyle, HighContrastSelector, ICheckboxStyleProps, ICheckboxStyles, ICustomizations, ICustomizerContext, IDetailsColumnStyleProps, IDetailsHeaderStyleProps, IDetailsHeaderStyles, IDetailsRowStyleProps, IDropdownStyleProps, IDropdownStyles, IGroupHeaderStyleProps, ILabelStyleProps, ILinkStyleProps, IModalStyleProps, IPivotStyleProps, IPivotStyles, IProgressIndicatorStyleProps, IProgressIndicatorStyles, IRawStyle, isDark, ISearchBoxStyleProps, ISearchBoxStyles, IsFocusVisibleClassName, ISliderStyleProps, ISliderStyles, ZIndexes } from "@fluentui/react";
 import { VsColors } from "./themeColors";
 import { cbGlobalClassNames, dropDownClassNames, sliderClassNames } from "./globalClassNames";
 //import { getScrollbarStyle } from "./getScrollbarStyle";
@@ -1038,30 +1038,59 @@ export class VsCustomizerContext implements ICustomizerContext {
         }
       },
       "SearchBox" : {
-        styles:(props:ISearchBoxStyleProps) => {
-          const {theme, underlined, hasFocus} = props;
+        styles:(searchBoxStyleProps:ISearchBoxStyleProps):DeepPartial<ISearchBoxStyles>=> {
+          const {theme, underlined, hasFocus} = searchBoxStyleProps;
           const {SearchControlColors, CommonControlsColors} = this.vsColors;
+          const themeNotHighContrast = !this?.themeIsHighContrast;
+
         return { 
-          root: [{ 
-            backgroundColor:SearchControlColors.Unfocused,
-            border: `1px solid ${SearchControlColors.UnfocusedBorder}`,
-            selectors: {
-              ':hover': {
-                borderColor: SearchControlColors.MouseOverBorder,
-                backgroundColor:SearchControlColors.MouseOverBackground
-              },
-              [`:hover .ms-SearchBox-iconContainer`]: {
-                color: SearchControlColors.MouseOverSearchGlyph,
+          root: [
+            { 
+              backgroundColor:SearchControlColors.Unfocused,
+              border: `1px solid ${SearchControlColors.UnfocusedBorder}`,
+              selectors: {
+                ':hover': {
+                  borderColor: SearchControlColors.MouseOverBorder,
+                  backgroundColor:SearchControlColors.MouseOverBackground
+                },
+                [`:hover .ms-SearchBox-iconContainer`]: {
+                  color: SearchControlColors.MouseOverSearchGlyph,
+                },
               },
             },
-          },
+            themeNotHighContrast && {
+              selectors:{
+                [HighContrastSelector]:{
+                  borderColor:false as any
+                },
+                ':hover':{
+                  selectors:{
+                    [HighContrastSelector]:{
+                      borderColor:false as any
+                    }
+                  }
+                }
+              }
+            },
             // todo focused states for other
             hasFocus && [
               getInputFocusStyle(CommonControlsColors.FocusVisualText,underlined ? 0 : theme.effects.roundedCorner2, underlined ? 'borderBottom' : 'border'),
               {
                 border: `1px solid ${SearchControlColors.FocusedBorder}`,
                 backgroundColor:SearchControlColors.FocusedBackground
-              }
+              },
+              {
+                selectors: {
+                  ':after': {
+                    selectors: {
+                      [HighContrastSelector]: {
+                        borderColor:false as any,
+                        borderBottomColor:false as any
+                      },
+
+                  }
+                }
+              }}
             ],
           ],
           // gets background color from root
@@ -1086,9 +1115,16 @@ export class VsCustomizerContext implements ICustomizerContext {
           ],
           clearButton:[
             {
-              [`.${IsFocusVisibleClassName} && .ms-Button:focus:after`]:{
+              [`.${IsFocusVisibleClassName} && .ms-Button:focus:after`]:[
+                {
                 outline: `1px solid ${this.vsColors.CommonControlsColors.FocusVisualText}`,
-              },
+                },
+                themeNotHighContrast && {
+                  [HighContrastSelector]:{
+                    inset:"0px"
+                  }
+                }
+              ],
               selectors: {
                 '&:hover .ms-Button.ms-Button': {
                   backgroundColor: "transparent",
@@ -1099,7 +1135,6 @@ export class VsCustomizerContext implements ICustomizerContext {
                 '.ms-Button-icon': {
                   color: SearchControlColors.ClearGlyph,
                 },
-                
               },
               
             },

@@ -251,7 +251,7 @@ export function GroupedListDemo(props:IGroupedListDemoProps){
       <Slider styles={{root:{width:200}}} showValue value={sliderValue} min={-1} max={3} onChange={num => setSliderValue(num)} valueFormat={value => {
               return "The value";
           }}/>
-      <SearchBox clearButtonProps={{
+      <SearchBox placeholder="placeholder" clearButtonProps={{
           ariaLabel: 'Clear text',
           styles:{
             root: [
